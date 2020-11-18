@@ -47,7 +47,7 @@ SQL
     foreach my $item (@$items) {
         $i++;
         my $xml = GetXmlBiblio($item->{biblionumber});
-        $content .=  Encode::encode_utf8(C4::XSLT::engine->transform($xml, $xsl));
+        $content .=  C4::XSLT::engine->transform($xml, $xsl);
     }
 
 
