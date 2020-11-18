@@ -1,0 +1,46 @@
+{
+  "/biblionumber/{biblionumber}": {
+    "get": {
+      "x-mojo-to": "At::TrustBox::SubordinateItemsHooks::SubordinateItemsController#get",
+      "operationId": "SubordinateItems",
+      "tags": ["biblios"],
+      "parameters": [{
+        "name": "biblionumber",
+        "in": "path",
+        "description": "Internal biblio identifier",
+        "required": true,
+        "type": "integer"
+      }],
+      "produces": [
+        "application/json"
+      ],
+      "responses": {
+        "200": {
+          "description": "A list of subordinate biblionumber",
+          "schema": {
+              "type": "object",
+                "properties": {
+                  "pissed": {
+                    "description": "If the patron got pissed",
+                    "type": "boolean"
+                  }
+                }
+          }
+        },
+        "404": {
+          "description": "An error occured",
+          "schema": {
+              "type": "object",
+                "properties": {
+                  "error": {
+                    "description": "An explanation for the error",
+                    "type": "string"
+                  }
+                }
+          }
+        }
+      }
+    }
+  }
+}
+
