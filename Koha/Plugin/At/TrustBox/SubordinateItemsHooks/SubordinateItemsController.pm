@@ -24,13 +24,22 @@ sub get {
     my $controlfield = $record->field('001');
     
     my $internalid = $controlfield->data;
+
+    # 773
+
     
     my $sql= <<'SQL';
-    select * from ( SELECT biblionumber,
-    ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') AS ITEM FROM biblio_metadata ) rel
+select * from ( SELECT bm.biblionumber,
+    ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') AS ITEM,
+    ExtractValue(metadata,'//datafield[@tag="490"]/subfield[@code="v"]') AS volume,
+    ExtractValue(metadata,'//datafield[@tag="264"]/subfield[@code="c"]') AS pub_date,
+    isbn
+  FROM biblio_metadata bm 
+        join biblioitems bi on bi.biblionumber = bm.biblionumber) rel
     where item like ?
+    order by volume desc, pub_date desc
 SQL
-    
+    # implement ordering
     my $queryitem = $dbh->prepare($sql);
     $queryitem->execute($controlfield->data .'%');
     my $items = $queryitem->fetchall_arrayref({});
@@ -43,17 +52,25 @@ SQL
     $xsl = "$htdocs/$theme/$lang/xslt/$xsl";
     
     my $content = '';
+    my $isbns = [];
     my $i = 0;
+    my $data = [];
     foreach my $item (@$items) {
         $i++;
         my $xml = GetXmlBiblio($item->{biblionumber});
-        $content .=  C4::XSLT::engine->transform($xml, $xsl);
+        $content = C4::XSLT::engine->transform($xml, $xsl);
+        push(@$isbns, $item->{isbn});
     }
 
 
     return $c->render( status => 200, openapi => 
-        { content => $content, count => $i } );
+        { content => $content, count => $i, ibsns => $isbns } );
 }
 
 1;
+
+__END__
+    select * from ( SELECT biblionumber,
+    ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') AS ITEM FROM biblio_metadata ) rel
+    where item like ?
 
