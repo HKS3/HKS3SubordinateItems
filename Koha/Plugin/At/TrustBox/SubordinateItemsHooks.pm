@@ -128,12 +128,27 @@ sub opac_js {
         addVolumeTab();
     }
 
+
     function addVolumeTab() {    
         // console.log('add Volume tab');
+        // var volumes_table = '<div id="volumes">';
+    var volumes_table =`
+        <div id="volumes" class="table-striped">
+            <table id="volumes_table" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Volumes</th>
+                            <th>Covers</th>
+                        </tr>
+                    </thead>
+            </table>
+        </div>`
+    ;
+
         var tabs = $('#bibliodescriptions ul')
             .append('<li id="tab_volumes"><a id="vol_label" href="#volumes">Volumes</a></li>');
         var volumes = $('#bibliodescriptions')
-            .append('<div id="volumes"><p>Volumes loading ...</p></div>');
+            .append(volumes_table);
         $("#tab_volumes").hide();
 
         // "if" statment may/has to be removed when 
@@ -160,7 +175,10 @@ sub opac_js {
         .done(function(data) {
             $('#vol_label').text('Volumes ( '+data.count+' )');
             $("#tab_volumes").show();
-            $('#volumes').html(data.content);
+            // $('#volumes').html(data.content);
+            $('#volumes_table').DataTable( {
+                "data": data.data
+            } );
             
             })
         .error(function(data) {});
@@ -172,3 +190,26 @@ JS
     return $js;
 }
 
+__END__
+<table id="example" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Office</th>
+                <th>Extn.</th>
+                <th>Start date</th>
+                <th>Salary</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Office</th>
+                <th>Extn.</th>
+                <th>Start date</th>
+                <th>Salary</th>
+            </tr>
+        </tfoot>
+    </table>

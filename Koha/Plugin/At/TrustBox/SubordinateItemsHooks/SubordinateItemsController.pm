@@ -27,6 +27,8 @@ sub get {
 
     # 773
 
+    my $amazon_link = '<img border="0" src="https://images-na.ssl-images-amazon.com/images/P/%d.01.MZZZZZZZ.jpg" alt="Cover image" /></a>';
+
     
     my $sql= <<'SQL';
 select * from ( SELECT bm.biblionumber,
@@ -58,13 +60,14 @@ SQL
     foreach my $item (@$items) {
         $i++;
         my $xml = GetXmlBiblio($item->{biblionumber});
-        $content = C4::XSLT::engine->transform($xml, $xsl);
-        push(@$isbns, $item->{isbn});
+        my $cr = C4::XSLT::engine->transform($xml, $xsl);
+        push(@$data, [$cr, sprintf($amazon_link, $item->{isbn})]);
+        $content .= $cr;
     }
 
 
     return $c->render( status => 200, openapi => 
-        { content => $content, count => $i, ibsns => $isbns } );
+        { content => $content, count => $i, ibsns => $isbns, data => $data } );
 }
 
 1;
