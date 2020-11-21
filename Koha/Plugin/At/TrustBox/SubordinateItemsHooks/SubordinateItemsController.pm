@@ -60,8 +60,12 @@ SQL
     foreach my $item (@$items) {
         $i++;
         my $xml = GetXmlBiblio($item->{biblionumber});
+        my $biblioitem =  Koha::Biblioitems
+                ->find( { 'biblionumber' => $item->{biblionumber} } );
+        my $isbn = C4::Koha::GetNormalizedISBN($biblioitem->isbn);
+        $isbn =~ s/\D//g;
         my $cr = C4::XSLT::engine->transform($xml, $xsl);
-        push(@$data, [$cr, sprintf($amazon_link, $item->{isbn})]);
+        push(@$data, [$cr, sprintf($amazon_link, $isbn)]);
         $content .= $cr;
     }
 
