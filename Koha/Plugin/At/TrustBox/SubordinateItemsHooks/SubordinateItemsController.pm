@@ -18,6 +18,7 @@ use Mojo::JSON qw(decode_json encode_json);
 sub get {
     my $c = shift->openapi->valid_input or return;
     my $biblionumber = $c->validation->param('biblionumber');
+    my $type  = $c->validation->param('type');
     my $record       = GetMarcBiblio({ biblionumber => $biblionumber });
     my $dbh = C4::Context->dbh;
     
@@ -48,9 +49,17 @@ SQL
     
     return 0 unless scalar(@$items) > 0;
     
-    my $xsl = 'MARC21slim2OPACResults.xsl';
-    my $htdocs = C4::Context->config('opachtdocs');
-    my ($theme, $lang) = C4::Templates::themelanguage($htdocs, $xsl, 'opac');
+    my $xsl;
+    my $htdocs;
+    if ($type eq 'intranet') {
+        $xsl = 'MARC21slim2intranetResults.xsl';
+        $htdocs = C4::Context->config('intrahtdocs');
+    } else {
+        $xsl = 'MARC21slim2OPACResults.xsl';
+        $htdocs = C4::Context->config('opachtdocs');
+    }
+
+    my ($theme, $lang) = C4::Templates::themelanguage($htdocs, $xsl, $type);
     $xsl = "$htdocs/$theme/$lang/xslt/$xsl";
     
     my $content = '';
@@ -71,7 +80,8 @@ SQL
 
 
     return $c->render( status => 200, openapi => 
-        { content => $content, count => $i, ibsns => $isbns, data => $data } );
+        { content => $content, count => $i, ibsns => $isbns, data => $data,
+         } );
 }
 
 1;

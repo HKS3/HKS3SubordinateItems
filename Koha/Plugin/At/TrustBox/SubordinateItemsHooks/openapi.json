@@ -1,12 +1,26 @@
 {
-  "/biblionumber/{biblionumber}": {
+  "/biblionumber": {
     "get": {
       "x-mojo-to": "At::TrustBox::SubordinateItemsHooks::SubordinateItemsController#get",
       "operationId": "SubordinateItems",
       "tags": ["biblios"],
       "parameters": [{
+        "name": "type",
+        "in": "query",
+        "description": "opac or intranet",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "name": "lang",
+        "in": "query",
+        "description": "Language",
+        "required": false,
+        "type": "string"
+      },
+      {
         "name": "biblionumber",
-        "in": "path",
+        "in": "query",
         "description": "Internal biblio identifier",
         "required": true,
         "type": "integer"

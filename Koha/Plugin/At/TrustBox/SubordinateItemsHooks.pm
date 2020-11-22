@@ -41,7 +41,7 @@ sub new {
     return $self;
 }
 
-sub intranet_catalog_biblio_tab {
+sub intranet_catalog_biblio_tab_obsolete {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
     my @tabs;
@@ -118,39 +118,23 @@ sub static_routes {
 }
 
 
+sub opac_head {
+    my ( $self ) = @_;
+
+    return q|
+<link href="/opac-tmpl/bootstrap/css/datatables-intra.css" rel="stylesheet" type="text/css">
+    |;
+}
+
+
 sub opac_js {
     my ( $self ) = @_;
 
     my $js = <<'JS';
     <script>
     var page = $('body').attr('ID');
+    console.log('subordinate items', page, biblionumber);
     if (page == "opac-detail") {
-        addVolumeTab();
-    }
-
-
-    function addVolumeTab() {    
-        // console.log('add Volume tab');
-        // var volumes_table = '<div id="volumes">';
-    var volumes_table =`
-        <div id="volumes" class="table-striped">
-            <table id="volumes_table" class="display" style="width:100%">
-                    <thead>
-                        <tr>
-                            <th>Volumes</th>
-                            <th>Covers</th>
-                        </tr>
-                    </thead>
-            </table>
-        </div>`
-    ;
-
-        var tabs = $('#bibliodescriptions ul')
-            .append('<li id="tab_volumes"><a id="vol_label" href="#volumes">Volumes</a></li>');
-        var volumes = $('#bibliodescriptions')
-            .append(volumes_table);
-        $("#tab_volumes").hide();
-
         // "if" statment may/has to be removed when 
         // https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=27029
         // is in koha
@@ -161,13 +145,53 @@ sub opac_js {
                         .getAttribute("title");
             biblionumber = x.split(':')[2];
         }
+        addVolumeTab(biblionumber, 'opac');
+    }
+    else if (page == "catalog_detail") {
+        console.log('alread set ',biblionumber); 
+        addVolumeTab(biblionumber, 'intranet');
+    } 
+    
+
+
+    function addVolumeTab(biblionumber, type) {    
+        // console.log('add Volume tab');
+        // var volumes_table = '<div id="volumes">';
+        var volumes_table =`
+            <div id="volumes" class="table-striped">
+                <table id="volumes_table" class="display" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Volumes</th>
+                                <th>Covers</th>
+                            </tr>
+                        </thead>
+                </table>
+            </div>`
+        ;
+
+        if (type == 'intranet') {
+            var tab_classname = 'bibliodetails';
+        } else  {
+            var tab_classname = 'bibliodescriptions';
+        }
+        
+        var tabs = $('#'+tab_classname+' ul')
+            .append('<li id="tab_volumes"><a id="vol_label" href="#volumes">Volumes</a></li>');
+
+        var volumes = $('#'+tab_classname)
+            .append(volumes_table);
+        $("#tab_volumes").hide();
+
 
         // console.log('subordinate items', biblionumber);
         //$("#tab_volumes").on("click", function(e) {
         $(function(e) {
-            var ajaxData = '';
+            // var ajaxData = '';
+            var ajaxData = { 'biblionumber': biblionumber, 'type': type};
             $.ajax({
-              url: '/api/v1/contrib/subordinateitems/biblionumber/'+biblionumber,
+              // url: '/api/v1/contrib/subordinateitems/biblionumber/'+biblionumber,
+              url: '/api/v1/contrib/subordinateitems/biblionumber/',
             type: 'GET',
             dataType: 'json',
             data: ajaxData,
@@ -188,6 +212,11 @@ sub opac_js {
 JS
     
     return $js;
+}
+
+sub intranet_js {
+    my ( $self ) = @_;
+    return $self->opac_js();
 }
 
 __END__
