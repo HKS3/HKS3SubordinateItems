@@ -82,7 +82,8 @@ sub opac_js {
     my $js = <<'JS';
     <script>
     var page = $('body').attr('ID');
-    console.log('subordinate items', page, biblionumber);
+    // console.log('subordinate items', page, biblionumber);
+    var lang = $('html').attr('lang');
     if (page == "opac-detail") {
         // "if" statment may/has to be removed when 
         // https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=27029
@@ -138,7 +139,8 @@ sub opac_js {
         // console.log('subordinate items', biblionumber);
         //$("#tab_volumes").on("click", function(e) {
         $(function(e) {
-            var ajaxData = { 'biblionumber': biblionumber, 'type': type};
+            var ajaxData = { 'biblionumber': biblionumber, 
+                             'type': type, 'lang': lang};
             $.ajax({
               url: '/api/v1/contrib/subordinateitems/biblionumber/',
             type: 'GET',

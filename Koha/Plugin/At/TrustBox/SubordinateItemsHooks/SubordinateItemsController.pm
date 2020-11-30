@@ -32,6 +32,7 @@ sub get {
     my $c = shift->openapi->valid_input or return;
     my $biblionumber = $c->validation->param('biblionumber');
     my $type  = $c->validation->param('type');
+    my $lang_query  = $c->validation->param('lang');
     my $record       = GetMarcBiblio({ biblionumber => $biblionumber });
     my $dbh = C4::Context->dbh;
     
@@ -39,10 +40,6 @@ sub get {
     
     my $internalid = $controlfield->data;
 
-    # 773
-
-
-    
     my $sql= <<'SQL';
 select * from ( SELECT bm.biblionumber,
     ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') AS ITEM,
@@ -72,6 +69,8 @@ SQL
     }
 
     my ($theme, $lang) = C4::Templates::themelanguage($htdocs, $xsl, $type);
+    $lang = $lang_query unless $lang;
+    
     $xsl = "$htdocs/$theme/$lang/xslt/$xsl";
     
     my $content = '';
