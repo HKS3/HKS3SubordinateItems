@@ -154,6 +154,7 @@ sub opac_js {
             // $('#volumes').html(data.content);
             $('#volumes_table').DataTable( {
                 "data": data.data,
+                "order": [],
                 "language": {
                    "url": data.datatable_lang
                 },

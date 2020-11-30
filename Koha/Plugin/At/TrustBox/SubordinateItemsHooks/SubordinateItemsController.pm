@@ -69,7 +69,7 @@ SQL
     }
 
     my ($theme, $lang) = C4::Templates::themelanguage($htdocs, $xsl, $type);
-    $lang = $lang_query unless $lang;
+    $lang = $lang_query if $lang_query;
     
     $xsl = "$htdocs/$theme/$lang/xslt/$xsl";
     
