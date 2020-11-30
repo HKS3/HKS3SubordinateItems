@@ -11,9 +11,22 @@ use C4::XSLT;
 use C4::Biblio;
 use C4::XSLT;
 
+use C4::External::Amazon;
+
 use Koha::Biblios;
 use Koha::Items;
 use Mojo::JSON qw(decode_json encode_json);
+
+my $translate = {
+    'de-DE' => 
+        {dt      => 'https://cdn.datatables.net/plug-ins/1.10.21/i18n/German.json',
+         columns => ['Daten', 'Band', 'Jahr', 'Cover'],
+         label   => 'Bände',
+        },
+    'si-SI' => 
+        {dt      => 'https://cdn.datatables.net/plug-ins/1.10.21/i18n/Slovenian.json',
+        }
+};
 
 sub get {
     my $c = shift->openapi->valid_input or return;
@@ -28,7 +41,6 @@ sub get {
 
     # 773
 
-    my $amazon_link = '<img border="0" src="https://images-na.ssl-images-amazon.com/images/P/%d.01.MZZZZZZZ.jpg" alt="Cover image" /></a>';
 
     
     my $sql= <<'SQL';
@@ -74,15 +86,53 @@ SQL
         my $isbn = C4::Koha::GetNormalizedISBN($biblioitem->isbn);
         $isbn =~ s/\D//g;
         my $cr = C4::XSLT::engine->transform($xml, $xsl);
-        push(@$data, [$cr, sprintf($amazon_link, $isbn)]);
-        $content .= $cr;
+        push(@$data, [$cr, $item->{volume}, $item->{pub_date}, 
+                      image_link($isbn)]);
+    }
+
+    
+
+    return $c->render( status => 200, openapi => 
+        { count => $i, ibsns => $isbns, data => $data,
+          datatable_lang => $translate->{$lang}->{dt}, lang => $lang, 
+          title => $translate->{$lang}->{columns}, 
+          label => $translate->{$lang}->{label}, 
+        } );
+}
+
+
+sub image_link {
+    my $isbn = shift;
+    my $title = shift;
+    my $link = '<div></div>';
+
+    if ( C4::Context->preference('OPACAmazonCoverImages') ) {
+        my $amazon_link = '<a href="http://www.amazon%s/gp/reader/%s%s';
+        if (C4::Context->preference('OPACURLOpenInNewWindow')) {
+            $amazon_link .= '#reader-link" target="_blank" rel="noreferrer">'
+        } else {
+            $amazon_link .= '">'
+        }
+
+        $amazon_link .= '<img border="0" src="https://images-na.ssl-images-amazon.com/images/P/%d.01.MZZZZZZZ.jpg" alt="Cover image" /></a>';
+
+        $link = sprintf($amazon_link,
+                        get_amazon_tld(),
+                        $isbn,
+                        C4::Context->preference('AmazonAssocTag'),
+                        $isbn,
+                        );
+    }
+
+    if ( C4::Context->preference('GoogleJackets') ) {
+        $link .= sprintf('<div title="%s" class="%s" id="gbs-thumbnail-preview"></div>', $isbn,$isbn);
+        $link .= sprintf('<div class="google-books-preview">
+<img border="0" src="https://books.google.com/books/content?vid=ISBN%s&printsec=frontcover&img=1&zoom=1"/></div>', $isbn);
     }
 
 
-    return $c->render( status => 200, openapi => 
-        { content => $content, count => $i, ibsns => $isbns, data => $data,
-         } );
-}
+    return $link;
+}      
 
 1;
 

@@ -41,57 +41,6 @@ sub new {
     return $self;
 }
 
-sub intranet_catalog_biblio_tab_obsolete {
-    my ( $self, $args ) = @_;
-    my $cgi = $self->{'cgi'};
-    my @tabs;
-    
-    my $biblionumber = $cgi->param('biblionumber');
-    $biblionumber = HTML::Entities::encode($biblionumber);
-    # cgi-bin/catalogue/showmarc.pl
-
-    my $record       = GetMarcBiblio({ biblionumber => $biblionumber });
-    my $dbh = C4::Context->dbh;
-
-    my $controlfield = $record->field('001');
-
-    my $internalid = $controlfield->data;
-
-    my $query= <<'SQL';
-    select * from ( SELECT biblionumber,
-    ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') AS ITEM FROM biblio_metadata ) rel
-    where item like ?
-SQL
-
-    my $queryitem = $dbh->prepare($query);
-    $queryitem->execute($controlfield->data .'%');
-    my $items = $queryitem->fetchall_arrayref({});
-
-    return 0 unless scalar(@$items) > 0;    
-
-    my $xsl = 'MARC21slim2intranetResults.xsl';
-    my $htdocs = C4::Context->config('intrahtdocs');
-    my ($theme, $lang) = C4::Templates::themelanguage($htdocs, $xsl, 'intranet');
-    $xsl = "$htdocs/$theme/$lang/xslt/$xsl";
-
-    my $content = '';
-
-    foreach my $item (@$items) {
-      my $xml = GetXmlBiblio($item->{biblionumber});
-        $content .=  Encode::encode_utf8(C4::XSLT::engine->transform($xml, $xsl));
-    }
-
-    push @tabs,
-      Koha::Plugins::Tab->new(
-        {
-            title   => 'Teile',
-            content => $content,
-        }
-      );
-
-    return @tabs;
-}
-
 
 sub api_routes {
     my ( $self, $args ) = @_;
@@ -152,7 +101,7 @@ sub opac_js {
         addVolumeTab(biblionumber, 'intranet');
     } 
     
-
+    // XXX ToDo translation
 
     function addVolumeTab(biblionumber, type) {    
         // console.log('add Volume tab');
@@ -162,7 +111,9 @@ sub opac_js {
                 <table id="volumes_table" class="display" style="width:100%">
                         <thead>
                             <tr>
-                                <th>Volumes</th>
+                                <th>Data</th>
+                                <th>Volume</th>
+                                <th>Date</th>
                                 <th>Covers</th>
                             </tr>
                         </thead>
@@ -177,7 +128,7 @@ sub opac_js {
         }
         
         var tabs = $('#'+tab_classname+' ul')
-            .append('<li id="tab_volumes"><a id="vol_label" href="#volumes">Volumes</a></li>');
+            .append('<li id="tab_volumes"><a id="vol_label" href="#volumes">Volume</a></li>');
 
         var volumes = $('#'+tab_classname)
             .append(volumes_table);
@@ -187,23 +138,30 @@ sub opac_js {
         // console.log('subordinate items', biblionumber);
         //$("#tab_volumes").on("click", function(e) {
         $(function(e) {
-            // var ajaxData = '';
             var ajaxData = { 'biblionumber': biblionumber, 'type': type};
             $.ajax({
-              // url: '/api/v1/contrib/subordinateitems/biblionumber/'+biblionumber,
               url: '/api/v1/contrib/subordinateitems/biblionumber/',
             type: 'GET',
             dataType: 'json',
             data: ajaxData,
         })
         .done(function(data) {
-            $('#vol_label').text('Volumes ( '+data.count+' )');
+            $('#vol_label').text((data.label ? data.label : 'Volumes')
+                                   + ' ( '+data.count+' )');
             $("#tab_volumes").show();
             // $('#volumes').html(data.content);
             $('#volumes_table').DataTable( {
-                "data": data.data
+                "data": data.data,
+                "language": {
+                   "url": data.datatable_lang
+                },
+                "columns": [
+                    {"title": data.title ? data.title[0] : 'Data'},
+                    {"title": data.title ? data.title[1] : 'Volume'},
+                    {"title": data.title ? data.title[2] : 'Year'},
+                    {"title": data.title ? data.title[3] : 'Cover'}
+                    ]
             } );
-            
             })
         .error(function(data) {});
         });
