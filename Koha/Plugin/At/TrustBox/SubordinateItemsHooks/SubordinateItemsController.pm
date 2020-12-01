@@ -44,7 +44,7 @@ sub get {
 select * from ( SELECT bm.biblionumber,
     ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') AS ITEM,
     ExtractValue(metadata,'//datafield[@tag="490"]/subfield[@code="v"]') AS volume,
-    ExtractValue(metadata,'//datafield[@tag="264"]/subfield[@code="c"]') AS pub_date,
+    ExtractValue(metadata,'//datafield[@tag="264"][@ind2=" "]/subfield[@code="c"]') AS pub_date,
     isbn
   FROM biblio_metadata bm 
         join biblioitems bi on bi.biblionumber = bm.biblionumber) rel
