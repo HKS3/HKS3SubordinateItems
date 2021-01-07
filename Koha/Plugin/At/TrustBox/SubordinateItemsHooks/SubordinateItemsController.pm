@@ -89,13 +89,62 @@ SQL
                       image_link($isbn)]);
     }
 
-    
-
     return $c->render( status => 200, openapi => 
         { count => $i, ibsns => $isbns, data => $data,
           datatable_lang => $translate->{$lang}->{dt}, lang => $lang, 
           title => $translate->{$lang}->{columns}, 
           label => $translate->{$lang}->{label}, 
+        } );
+}
+
+
+sub bytitle {
+    my $c = shift->openapi->valid_input or return;
+    my $title = $c->validation->param('title');
+    my $dbh = C4::Context->dbh;
+
+    my $sql= <<'SQL';
+select 
+    ExtractValue(metadata,'//controlfield[@tag="001"]') AS control,         
+    b.title, 
+    b.biblionumber 
+from biblio b join biblioitems bi              
+  on b.biblionumber = bi.biblionumber      
+join biblio_metadata bm       
+  on bi.biblionumber = bm.biblionumber 
+where b.title like ?
+  and substring(ExtractValue(metadata,'//leader'), 8, 1) = 's';
+SQL
+    # implement ordering
+    my $queryitem = $dbh->prepare($sql);
+    $queryitem->execute($title .'%');
+    my $items = $queryitem->fetchall_arrayref({});
+
+    return 0 unless scalar(@$items) > 0;
+
+    my $type = 'intranet';
+    my $xsl = 'MARC21slim2intranetResults.xsl';
+    my $htdocs = C4::Context->config('intrahtdocs');
+
+    my ($theme, $lang) = C4::Templates::themelanguage($htdocs, $xsl, $type);
+    $lang = 'en';
+
+    $xsl = "$htdocs/$theme/$lang/xslt/$xsl";
+
+    my $content = '';
+    my $i = 0;
+    my $data = [];
+    foreach my $item (@$items) {
+        $i++;
+        my $xml = GetXmlBiblio($item->{biblionumber});
+        my $cr = C4::XSLT::engine->transform($xml, $xsl);
+        push(@$data, [$cr, $item->{biblionumber}, $item->{control}]);
+    }
+
+    return $c->render( status => 200, openapi => 
+        { 
+            count => $i,
+            data => $data,
         } );
 }
 
@@ -128,7 +177,6 @@ sub image_link {
         $link .= sprintf('<div class="google-books-preview">
 <img border="0" src="https://books.google.com/books/content?vid=ISBN%s&printsec=frontcover&img=1&zoom=1"/></div>', $isbn);
     }
-
 
     return $link;
 }      
