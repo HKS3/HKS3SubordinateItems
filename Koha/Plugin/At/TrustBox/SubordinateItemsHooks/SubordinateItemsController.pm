@@ -138,7 +138,9 @@ SQL
         $i++;
         my $xml = GetXmlBiblio($item->{biblionumber});
         my $cr = C4::XSLT::engine->transform($xml, $xsl);
-        push(@$data, [$cr, $item->{biblionumber}, $item->{control}]);
+        my $select = sprintf('<input type="radio" id="%d" name="parent_radio" value="%d" title="%s">', 
+                            $item->{control}, $item->{control}, $item->{title});
+        push(@$data, [$select, $item->{title}, $cr, $item->{biblionumber}, $item->{control}]);
     }
 
     return $c->render( status => 200, openapi => 
