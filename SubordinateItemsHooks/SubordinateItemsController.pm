@@ -1,4 +1,4 @@
-package Koha::Plugin::At::TrustBox::SubordinateItemsHooks::SubordinateItemsController;
+package Koha::Plugin::HKS3SubordinateItems::SubordinateItemsHooks::SubordinateItemsController;
 
 use Mojo::Base 'Mojolicious::Controller';
 

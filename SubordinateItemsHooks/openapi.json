@@ -1,7 +1,7 @@
 {
   "/biblionumber": {
     "get": {
-      "x-mojo-to": "At::TrustBox::SubordinateItemsHooks::SubordinateItemsController#get",
+      "x-mojo-to": "HKS3SubordinateItems::SubordinateItemsHooks::SubordinateItemsController#get",
       "operationId": "SubordinateItems",
       "tags": ["biblios"],
       "parameters": [{
@@ -58,7 +58,7 @@
   },
   "/bytitle": {
   "get": {
-      "x-mojo-to": "At::TrustBox::SubordinateItemsHooks::SubordinateItemsController#bytitle",
+      "x-mojo-to": "HKS3SubordinateItems::SubordinateItemsHooks::SubordinateItemsController#bytitle",
       "operationId": "SubordinateItemsByTitle",
       "tags": ["biblios"],
       "parameters": [{

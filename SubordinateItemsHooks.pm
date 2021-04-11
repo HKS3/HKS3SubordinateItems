@@ -1,4 +1,4 @@
-package Koha::Plugin::At::TrustBox::SubordinateItemsHooks;
+package Koha::Plugin::HKS3SubordinateItems::SubordinateItemsHooks;
 
 use Modern::Perl;
 
