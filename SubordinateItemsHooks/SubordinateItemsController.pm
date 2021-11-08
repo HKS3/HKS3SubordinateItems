@@ -113,7 +113,11 @@ from biblio b join biblioitems bi
 join biblio_metadata bm       
   on bi.biblionumber = bm.biblionumber 
 where b.title like ?
-  and substring(ExtractValue(metadata,'//leader'), 8, 1) = 's';
+( 
+    (substring(ExtractValue(metadata,'//leader'), 8, 1) = 'm' and substring(ExtractValue(metadata,'//leader'), 20, 1) = 'a')  
+   or 
+    substring(ExtractValue(metadata,'//leader'), 8, 1) = 's'
+)
 SQL
     # implement ordering
     my $queryitem = $dbh->prepare($sql);
