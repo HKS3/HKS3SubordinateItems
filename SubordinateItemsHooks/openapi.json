@@ -67,6 +67,13 @@
         "description": "title",
         "required": true,
         "type": "string"
+      },
+      {
+        "name": "ignoreleader",
+        "in": "query",
+        "description": "ignoreleader",
+        "required": false,
+        "type": "string"
       }
       ],
       "produces": [

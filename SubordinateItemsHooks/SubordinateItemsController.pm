@@ -75,7 +75,7 @@ SQL
     
     my $content = '';
     my $isbns = [];
-    my $i = 0;
+    my $i = 1;
     my $data = [];
     foreach my $item (@$items) {
         $i++;
@@ -101,6 +101,8 @@ SQL
 sub bytitle {
     my $c = shift->openapi->valid_input or return;
     my $title = $c->validation->param('title');
+    # ignore leader, for "Aufsatz"
+    my $ignore_leader = $c->validation->param('ignoreleader');
     my $dbh = C4::Context->dbh;
 
     my $sql= <<'SQL';
@@ -113,12 +115,20 @@ from biblio b join biblioitems bi
 join biblio_metadata bm       
   on bi.biblionumber = bm.biblionumber 
 where b.title like ?
+SQL
+
+    if ($ignore_leader != 1) {
+    my $leader_sql= <<'SQL'; 
+and
 ( 
     (substring(ExtractValue(metadata,'//leader'), 8, 1) = 'm' and substring(ExtractValue(metadata,'//leader'), 20, 1) = 'a')  
    or 
     substring(ExtractValue(metadata,'//leader'), 8, 1) = 's'
 )
 SQL
+    $sql .= $leader_sql;
+    }
+
     # implement ordering
     my $queryitem = $dbh->prepare($sql);
     $queryitem->execute($title .'%');
