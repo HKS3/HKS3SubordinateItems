@@ -109,7 +109,9 @@ sub bytitle {
 select 
     ExtractValue(metadata,'//controlfield[@tag="001"]') AS control,         
     b.title, 
-    b.biblionumber 
+    b.biblionumber,
+    isbn, 
+    issn
 from biblio b join biblioitems bi              
   on b.biblionumber = bi.biblionumber      
 join biblio_metadata bm       
@@ -154,7 +156,7 @@ SQL
         my $cr = C4::XSLT::engine->transform($xml, $xsl);
         my $select = sprintf('<input type="radio" id="%d" name="parent_radio" value="%d" title="%s">', 
                             $item->{control}, $item->{control}, $item->{title});
-        push(@$data, [$select, $item->{title}, $cr, $item->{biblionumber}, $item->{control}]);
+        push(@$data, [$select, $item->{title}, $cr, $item->{biblionumber}, $item->{control}, $item->{isbn}, $item->{issn}]);
     }
 
     return $c->render( status => 200, openapi => 
