@@ -41,19 +41,31 @@ sub get {
     my $internalid = $controlfield->data;
 
     my $sql= <<'SQL';
-select * from ( SELECT bm.biblionumber,
-    ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') AS ITEM,
-    ExtractValue(metadata,'//datafield[@tag="490"]/subfield[@code="v"]') AS volume,
-    ExtractValue(metadata,'//datafield[@tag="264"][@ind2=" "]/subfield[@code="c"]') AS pub_date,
-    isbn
-  FROM biblio_metadata bm 
-        join biblioitems bi on bi.biblionumber = bm.biblionumber) rel
-    where item like ?
+with cte_sub_items as (  
+    SELECT 
+        bm.biblionumber,    
+        ExtractValue(metadata,'//datafield[@tag="733"]/subfield[@code="w"]') AS ITEM733,
+        ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code="w"]') AS ITEM830,     
+        ExtractValue(metadata,'//datafield[@tag="490"]/subfield[@code="v"]') AS volume,     
+        ExtractValue(metadata,'//datafield[@tag="264"][@ind2=" "]/subfield[@code="c"]') AS pub_date,     
+        isbn FROM biblio_metadata bm 
+        join biblioitems bi on bi.biblionumber = bm.biblionumber ), 
+cte_sub2 as ( 
+    select  
+        biblionumber, 
+        (case 
+            when length(ITEM733) > 0 then item733  
+            when length(ITEM830) > 0 then item830  
+        else null end) item, 
+        volume,         
+        pub_date,         
+        isbn from  cte_sub_items) 
+    select * from cte_sub2 where item = ?     
     order by volume desc, pub_date desc
 SQL
     # implement ordering
     my $queryitem = $dbh->prepare($sql);
-    $queryitem->execute($controlfield->data .'%');
+    $queryitem->execute($controlfield->data);
     my $items = $queryitem->fetchall_arrayref({});
     
     return 0 unless scalar(@$items) > 0;
@@ -102,7 +114,7 @@ sub bytitle {
     my $c = shift->openapi->valid_input or return;
     my $title = $c->validation->param('title');
     # ignore leader, for "Aufsatz"
-    my $ignore_leader = $c->validation->param('ignoreleader');
+    my $ignore_leader = $c->validation->param('ignoreleader') ? $c->validation->param('ignoreleader') : 0;
     my $dbh = C4::Context->dbh;
 
     my $sql= <<'SQL';
@@ -154,7 +166,7 @@ SQL
         $i++;
         my $xml = GetXmlBiblio($item->{biblionumber});
         my $cr = C4::XSLT::engine->transform($xml, $xsl);
-        my $select = sprintf('<input type="radio" id="%d" name="parent_radio" value="%d" title="%s">', 
+        my $select = sprintf('<input type="radio" id="%s" name="parent_radio" value="%s" title="%s">', 
                             $item->{control}, $item->{control}, $item->{title});
         push(@$data, [$select, $item->{title}, $cr, $item->{biblionumber}, $item->{control}, $item->{isbn}, $item->{issn}]);
     }
