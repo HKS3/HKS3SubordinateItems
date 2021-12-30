@@ -44,7 +44,7 @@ sub get {
 with cte_sub_items as (  
     SELECT 
         bm.biblionumber,    
-        ExtractValue(metadata,'//datafield[@tag="733"]/subfield[@code="w"]') AS ITEM733,
+        ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') AS ITEM773,
         ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code="w"]') AS ITEM830,     
         ExtractValue(metadata,'//datafield[@tag="490"]/subfield[@code="v"]') AS volume,     
         ExtractValue(metadata,'//datafield[@tag="264"][@ind2=" "]/subfield[@code="c"]') AS pub_date,     
@@ -54,7 +54,7 @@ cte_sub2 as (
     select  
         biblionumber, 
         (case 
-            when length(ITEM733) > 0 then item733  
+            when length(ITEM773) > 0 then item773  
             when length(ITEM830) > 0 then item830  
         else null end) item, 
         volume,         
