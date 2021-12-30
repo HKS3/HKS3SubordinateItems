@@ -61,7 +61,7 @@ cte_sub2 as (
         pub_date,         
         isbn from  cte_sub_items) 
     select * from cte_sub2 where item = ?     
-    order by volume desc, pub_date desc
+    order by pub_date desc, volume desc
 SQL
     # implement ordering
     my $queryitem = $dbh->prepare($sql);
