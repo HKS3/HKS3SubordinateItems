@@ -98,7 +98,7 @@ sub opac_js {
         addVolumeTab(biblionumber, 'opac');
     }
     else if (page == "catalog_detail") {
-        console.log('alread set ',biblionumber); 
+        // console.log('alread set ',biblionumber); 
         addVolumeTab(biblionumber, 'intranet');
     } 
     
