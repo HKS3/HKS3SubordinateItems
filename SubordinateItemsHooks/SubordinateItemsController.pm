@@ -44,18 +44,20 @@ sub get {
 with cte_sub_items as (  
     SELECT 
         bm.biblionumber,    
-        ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') AS ITEM773,
-        ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code="w"]') AS ITEM830,     
+        sf773w AS ITEM773,
+        sf830w AS ITEM830,     
         ExtractValue(metadata,'//datafield[@tag="490"]/subfield[@code="v"]') AS volume,     
         ExtractValue(metadata,'//datafield[@tag="264"][@ind2=" "]/subfield[@code="c"]') AS pub_date,     
         isbn FROM biblio_metadata bm 
-        join biblioitems bi on bi.biblionumber = bm.biblionumber ), 
+        join biblioitems bi on bi.biblionumber = bm.biblionumber 
+        where sf773w is not null or sf830w is not null
+), 
 cte_sub2 as ( 
     select  
         biblionumber, 
         (case 
-            when length(ITEM773) > 0 then item773  
-            when length(ITEM830) > 0 then item830  
+            when ITEM773 > 0 then item773  
+            when ITEM830 > 0 then item830  
         else null end) item, 
         volume,         
         pub_date,         
@@ -87,7 +89,7 @@ SQL
     
     my $content = '';
     my $isbns = [];
-    my $i = 1;
+    my $i = 0;
     my $data = [];
     foreach my $item (@$items) {
         $i++;
