@@ -44,8 +44,8 @@ sub get {
 with cte_sub_items as (  
     SELECT 
         bm.biblionumber,    
-        sf773w AS ITEM773,
-        sf830w AS ITEM830,     
+        sf773w_json AS ITEM773,
+        sf830w_json AS ITEM830,     
         ExtractValue(metadata,'//datafield[@tag="490"]/subfield[@code="v"]') AS volume,     
         ExtractValue(metadata,'//datafield[@tag="264"][@ind2=" "]/subfield[@code="c"]') AS pub_date,     
         isbn FROM biblio_metadata bm 
@@ -55,19 +55,19 @@ with cte_sub_items as (
 cte_sub2 as ( 
     select  
         biblionumber, 
-        (case 
-            when ITEM773 > 0 then item773  
-            when ITEM830 > 0 then item830  
-        else null end) item, 
         volume,         
+        ITEM773,
+        ITEM830,
         pub_date,         
         isbn from  cte_sub_items) 
-    select * from cte_sub2 where item = ?     
+    select * from cte_sub2 where
+        JSON_CONTAINS(ITEM773,?,'$') or
+        JSON_CONTAINS(ITEM830,?,'$')
     order by pub_date desc, volume desc
 SQL
     # implement ordering
     my $queryitem = $dbh->prepare($sql);
-    $queryitem->execute($controlfield->data);
+    $queryitem->execute($controlfield->data, $controlfield->data);
     my $items = $queryitem->fetchall_arrayref({});
     
     return 0 unless scalar(@$items) > 0;

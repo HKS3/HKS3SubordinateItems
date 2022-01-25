@@ -9,9 +9,26 @@ showing subordinate-items via
 
 SQL for speedup 
 
+
+alter table biblio_metadata add sf773w_json varchar(100) generated always as (
+if ( length( trim(ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') )) = 0, NULL,
+ concat( '[', replace( ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]'), ' ', ','), ']')  
+ )) persistent;
+$$
+
+
+alter table biblio_metadata add sf830w_json varchar(100) generated always as (
+if ( length( trim(ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code="w"]') )) = 0, NULL,
+ concat( '[', replace( ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code="w"]'), ' ', ','), ']')  
+ )) persistent;
+$$
+
+
+
+if a book MUST only be a member of one hierarchy you may use those indices
+
 alter table biblio_metadata add sf773w varchar(100) generated always as ( 
 if ( length( trim(ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') )) = 0, NULL, trim(ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') )) ) persistent;
-
 
 alter table biblio_metadata add sf830w varchar(100) generated always as ( 
 if ( length( trim(ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code="w"]') )) = 0, NULL, trim(ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code="w"]') )) ) persistent;
