@@ -9,17 +9,15 @@ showing subordinate-items via
 
 SQL for speedup 
 
-
 alter table biblio_metadata add sf773w_json varchar(100) generated always as (
-if ( length( trim(ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') )) = 0, NULL,
- concat( '[', replace( ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]'), ' ', ','), ']')  
+if ( length( trim(ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]') )) = 0, NULL,   
+   concat('[\"', replace( ExtractValue(metadata,'//datafield[@tag="773"]/subfield[@code="w"]'), ' ', '\",\"'), '\"]')   
  )) persistent;
 $$
 
-
 alter table biblio_metadata add sf830w_json varchar(100) generated always as (
 if ( length( trim(ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code="w"]') )) = 0, NULL,
- concat( '[', replace( ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code="w"]'), ' ', ','), ']')  
+   concat('[\"', replace( ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code="w"]'), ' ', '\",\"'), '\"]')   
  )) persistent;
 $$
 

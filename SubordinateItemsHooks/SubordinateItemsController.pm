@@ -67,7 +67,8 @@ cte_sub2 as (
 SQL
     # implement ordering
     my $queryitem = $dbh->prepare($sql);
-    $queryitem->execute($controlfield->data, $controlfield->data);
+    my $search = sprintf('"%s"', $controlfield->data); 
+    $queryitem->execute($search, $search);
     my $items = $queryitem->fetchall_arrayref({});
     
     return 0 unless scalar(@$items) > 0;
