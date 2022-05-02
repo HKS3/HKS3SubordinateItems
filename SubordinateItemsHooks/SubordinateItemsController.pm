@@ -39,35 +39,38 @@ sub get {
     my $controlfield = $record->field('001');
     
     my $internalid = $controlfield->data;
+    my $search = sprintf('"%s"', $controlfield->data); 
 
-    my $sql= <<'SQL';
-with cte_sub_items as (  
-    SELECT 
-        bm.biblionumber,    
+    my $sql= <<"SQL";
+with cte_sub_items as (
+    SELECT
+        bm.biblionumber,
         sf773w_json AS ITEM773,
-        sf830w_json AS ITEM830,     
-        ExtractValue(metadata,'//datafield[@tag="490"]/subfield[@code="v"]') AS volume,     
-        ExtractValue(metadata,'//datafield[@tag="264"][@ind2=" "]/subfield[@code="c"]') AS pub_date,     
-        isbn FROM biblio_metadata bm 
-        join biblioitems bi on bi.biblionumber = bm.biblionumber 
+        sf830w_json AS ITEM830,
+        ExtractValue(metadata,'//datafield[\@tag="490"]/subfield[\@code="v"]') AS volume,
+        ExtractValue(metadata,'.//datafield[\@tag="830"]/subfield[\@code="v"][contains(../subfield[\@code="w"], $search)]') AS volume_830v,
+        ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="q"][contains(../subfield[\@code="w"], $search)]') AS volume_773q,
+        ExtractValue(metadata,'//datafield[\@tag="264"][\@ind2=" "]/subfield[\@code="c"]') AS pub_date,            
+        isbn FROM biblio_metadata bm
+        join biblioitems bi on bi.biblionumber = bm.biblionumber
         where sf773w is not null or sf830w is not null
-), 
-cte_sub2 as ( 
-    select  
-        biblionumber, 
-        volume,         
+),
+cte_sub2 as (
+    select
+        biblionumber,        
         ITEM773,
         ITEM830,
-        pub_date,         
-        isbn from  cte_sub_items) 
-    select * from cte_sub2 where
-        JSON_CONTAINS(ITEM773,?,'$') or
-        JSON_CONTAINS(ITEM830,?,'$')
-    order by pub_date desc, volume desc
+        pub_date,
+        coalesce( volume_830v, volume_773q) volume,
+        isbn from  cte_sub_items)
+    select * from cte_sub2 where                
+        (JSON_CONTAINS(ITEM773,?,'\$') or
+        JSON_CONTAINS(ITEM830,?,'\$'))            
+    order by pub_date desc, volume desc;
+
 SQL
     # implement ordering
     my $queryitem = $dbh->prepare($sql);
-    my $search = sprintf('"%s"', $controlfield->data); 
     $queryitem->execute($search, $search);
     my $items = $queryitem->fetchall_arrayref({});
     
