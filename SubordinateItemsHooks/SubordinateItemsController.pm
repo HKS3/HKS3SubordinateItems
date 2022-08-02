@@ -61,7 +61,7 @@ cte_sub2 as (
         ITEM773,
         ITEM830,
         pub_date,
-        coalesce( volume_830v, volume_773q) volume,
+        coalesce( nullif(volume_830v, ''), nullif(volume_773q, '')) volume,
         isbn from  cte_sub_items)
     select * from cte_sub2 where                
         (JSON_CONTAINS(ITEM773,?,'\$') or
