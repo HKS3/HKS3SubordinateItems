@@ -50,7 +50,7 @@ with cte_sub_items as (
         ExtractValue(metadata,'//datafield[\@tag="490"]/subfield[\@code="v"]') AS volume,
         ExtractValue(metadata,'.//datafield[\@tag="830"]/subfield[\@code="v"][contains(../subfield[\@code="w"], $search)]') AS volume_830v,
         ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="q"][contains(../subfield[\@code="w"], $search)]') AS volume_773q,
-        ExtractValue(metadata,'//datafield[\@tag="264"][\@ind2=" "]/subfield[\@code="c"]') AS pub_date,            
+        ExtractValue(metadata,'//datafield[\@tag="264"][\@ind2="1"]/subfield[\@code="c"]') AS pub_date,            
         isbn FROM biblio_metadata bm
         join biblioitems bi on bi.biblionumber = bm.biblionumber
         where sf773w is not null or sf830w is not null
