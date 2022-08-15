@@ -96,6 +96,7 @@ sub opac_js {
             biblionumber = x.split(':')[2];
         }
         addVolumeTab(biblionumber, 'opac');
+        addVolumeTab(biblionumber, 'opac', 'articles');
     }
     else if (page == "catalog_detail") {
         // console.log('alread set ',biblionumber); 
@@ -104,9 +105,9 @@ sub opac_js {
     
     // XXX ToDo translation
 
-    function addVolumeTab(biblionumber, type) {    
-        // console.log('add Volume tab');
-        // var volumes_table = '<div id="volumes">';
+    function addVolumeTab(biblionumber, type, subtype = 'volumes' ) {    
+        console.log('add Volume tab', type, subtype);
+        // var volumes_table = '<div id="'+subtype+'">';
         var volumes_table =`
             <div id="volumes" class="table-striped">
                 <table id="volumes_table" class="display" style="width:100%">
@@ -122,24 +123,36 @@ sub opac_js {
             </div>`
         ;
 
+        var articles_table =`
+            <div id="articles" class="table-striped">
+                <table id="articles_table" class="display" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Volume</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                </table>
+            </div>`
+        ;
+
+
         if (type == 'intranet') {
             var tab_classname = 'bibliodetails';
         } else  {
             var tab_classname = 'bibliodescriptions';
         }
         
-        var tabs = $('#'+tab_classname+' ul')
-            .append('<li id="tab_volumes"><a id="vol_label" href="#volumes">Volume</a></li>');
+        if (subtype == 'volumes') {
+            var tabs = $('#'+tab_classname+' ul')
+                .append('<li id="tab_volumes"><a id="vol_label" href="#volumes">Volume</a></li>');
+            var volumes = $('#'+tab_classname)
+              .append(volumes_table);
+            $("#tab_volumes").hide();
 
-        var volumes = $('#'+tab_classname)
-            .append(volumes_table);
-        $("#tab_volumes").hide();
-
-
-        // console.log('subordinate items', biblionumber);
-        //$("#tab_volumes").on("click", function(e) {
-        $(function(e) {
-            var ajaxData = { 'biblionumber': biblionumber, 
+       $(function(e) {
+            var ajaxData = { 'biblionumber': biblionumber,
                              'type': type, 'lang': lang};
             $.ajax({
               url: '/api/v1/contrib/subordinateitems/biblionumber/',
@@ -168,6 +181,44 @@ sub opac_js {
             })
         .error(function(data) {});
         });
+
+
+        } else {
+            var tabs = $('#'+tab_classname+' ul')
+                .append('<li id="tab_articles"><a id="articles_label" href="#articles">Articles</a></li>');
+            var articles = $('#'+tab_classname)
+                .append(articles_table);
+            $("#tab_articles").hide();
+
+        $(function(e) {
+            var ajaxData = { 'biblionumber': biblionumber,
+                             'type': type, 'lang': lang, 'subtype': 'articles'};
+            $.ajax({
+              url: '/api/v1/contrib/subordinateitems/biblionumber/',
+            type: 'GET',
+            dataType: 'json',
+            data: ajaxData,
+        })
+        .done(function(data) {
+            $('#articles_label').text((data.label ? data.label : 'Articles')
+                                   + ' ( '+data.count+' )');
+            $("#tab_articles").show();
+            $('#articles_table').DataTable( {
+                "data": data.data,
+                "order": [],
+                "language": {
+                   "url": data.datatable_lang
+                },
+                "columns": [
+                    {"title": data.title ? data.title[0] : 'Data'},
+                    {"title": data.title ? data.title[1] : 'Volume'},
+                    {"title": data.title ? data.title[2] : 'Year'}
+                    ]
+            } );
+            })
+        .error(function(data) {});
+        });
+        }
     }
     </script>
 JS
@@ -181,7 +232,37 @@ sub intranet_js {
 }
 
 __END__
-<table id="example" class="display" style="width:100%">
+<on(e) {
+            var ajaxData = { 'biblionumber': biblionumber,
+                             'type': type, 'lang': lang};
+            $.ajax({
+              url: '/api/v1/contrib/subordinateitems/biblionumber/',
+            type: 'GET',
+            dataType: 'json',
+            data: ajaxData,
+        })
+        .done(function(data) {
+            $('#vol_label').text((data.label ? data.label : 'Volumes')
+                                   + ' ( '+data.count+' )');
+            $("#tab_volumes").show();
+            // $('#volumes').html(data.content);
+            $('#volumes_table').DataTable( {
+                "data": data.data,
+                "order": [],
+                "language": {
+                   "url": data.datatable_lang
+                },
+                "columns": [
+                    {"title": data.title ? data.title[0] : 'Data'},
+                    {"title": data.title ? data.title[1] : 'Volume'},
+                    {"title": data.title ? data.title[2] : 'Year'},
+                    {"title": data.title ? data.title[3] : 'Cover'}
+                    ]
+            } );
+            })
+        .error(function(data) {});
+        });
+id="example" class="display" style="width:100%">
         <thead>
             <tr>
                 <th>Name</th>

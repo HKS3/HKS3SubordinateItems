@@ -33,6 +33,7 @@ sub get {
     my $biblionumber = $c->validation->param('biblionumber');
     my $type  = $c->validation->param('type');
     my $lang_query  = $c->validation->param('lang');
+    my $subtype  = $c->validation->param('subtype');
     my $record       = GetMarcBiblio({ biblionumber => $biblionumber });
     my $dbh = C4::Context->dbh;
     
@@ -40,11 +41,19 @@ sub get {
     
     my $internalid = $controlfield->data;
     my $search = sprintf('"%s"', $controlfield->data); 
+    my $article = " art  "; 
+    if ($subtype eq 'articles') {
+        $translate->{'de-DE'}->{'label'} = 'Artikel';
+    }
+
+    $article .= $subtype eq 'articles' ? ' = "a" ' : ' <> "a" ';
+
 
     my $sql= <<"SQL";
 with cte_sub_items as (
     SELECT
         bm.biblionumber,
+        substr(ExtractValue(metadata,'//leader'), 8, 1) art,
         sf773w_json AS ITEM773,
         sf830w_json AS ITEM830,
         ExtractValue(metadata,'//datafield[\@tag="490"]/subfield[\@code="v"]') AS volume,
@@ -62,13 +71,16 @@ cte_sub2 as (
         ITEM830,
         pub_date,
         coalesce( nullif(volume_830v, ''), nullif(volume_773q, '')) volume,
-        isbn from  cte_sub_items)
+        isbn from cte_sub_items
+        where $article
+    )
     select * from cte_sub2 where                
         (JSON_CONTAINS(ITEM773,?,'\$') or
         JSON_CONTAINS(ITEM830,?,'\$'))            
     order by pub_date desc, volume desc;
 
 SQL
+
     # implement ordering
     my $queryitem = $dbh->prepare($sql);
     $queryitem->execute($search, $search);

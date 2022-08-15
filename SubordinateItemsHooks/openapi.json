@@ -24,7 +24,15 @@
         "description": "Internal biblio identifier",
         "required": true,
         "type": "integer"
-      }],
+      },
+      {
+        "name": "subtype",
+        "in": "query",
+        "description": "Article or Volume",
+        "required": false,
+        "type": "string"
+      }
+      ],
       "produces": [
         "application/json"
       ],
