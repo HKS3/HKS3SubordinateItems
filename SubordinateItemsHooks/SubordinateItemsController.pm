@@ -44,10 +44,11 @@ sub get {
     my $article = " art  "; 
     if ($subtype eq 'articles') {
         $translate->{'de-DE'}->{'label'} = 'Artikel';
+        $article .=  ' = "a" ';
+    } else {
+        $translate->{'de-DE'}->{'label'} = 'Bände';
+        $article .=  ' <> "a" ';
     }
-
-    $article .= $subtype eq 'articles' ? ' = "a" ' : ' <> "a" ';
-
 
     my $sql= <<"SQL";
 with cte_sub_items as (

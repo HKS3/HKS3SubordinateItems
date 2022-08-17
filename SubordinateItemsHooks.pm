@@ -101,6 +101,7 @@ sub opac_js {
     else if (page == "catalog_detail") {
         // console.log('alread set ',biblionumber); 
         addVolumeTab(biblionumber, 'intranet');
+        addVolumeTab(biblionumber, 'intranet', 'articles');
     } 
     
     // XXX ToDo translation
@@ -130,7 +131,6 @@ sub opac_js {
                             <tr>
                                 <th>Data</th>
                                 <th>Volume</th>
-                                <th>Date</th>
                             </tr>
                         </thead>
                 </table>
@@ -212,7 +212,6 @@ sub opac_js {
                 "columns": [
                     {"title": data.title ? data.title[0] : 'Data'},
                     {"title": data.title ? data.title[1] : 'Volume'},
-                    {"title": data.title ? data.title[2] : 'Year'}
                     ]
             } );
             })
