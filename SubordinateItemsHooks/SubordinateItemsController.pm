@@ -59,7 +59,7 @@ with cte_sub_items as (
         sf830w_json AS ITEM830,
         ExtractValue(metadata,'//datafield[\@tag="490"]/subfield[\@code="v"]') AS volume,
         ExtractValue(metadata,'.//datafield[\@tag="830"]/subfield[\@code="v"][contains(../subfield[\@code="w"], $search)]') AS volume_830v,
-        ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="q"][contains(../subfield[\@code="w"], $search)]') AS volume_773q,
+        ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="g"][contains(../subfield[\@code="w"], $search)]') AS volume_773g,
         ExtractValue(metadata,'//datafield[\@tag="264"][\@ind2="1"]/subfield[\@code="c"]') AS pub_date,            
         isbn FROM biblio_metadata bm
         join biblioitems bi on bi.biblionumber = bm.biblionumber
@@ -71,7 +71,7 @@ cte_sub2 as (
         ITEM773,
         ITEM830,
         pub_date,
-        coalesce( nullif(volume_830v, ''), nullif(volume_773q, '')) volume,
+        coalesce( nullif(volume_830v, ''), nullif(volume_773g, '')) volume,
         isbn from cte_sub_items
         where $article
     )
