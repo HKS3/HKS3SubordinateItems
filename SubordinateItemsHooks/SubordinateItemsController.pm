@@ -114,10 +114,10 @@ SQL
         my $biblioitem =  Koha::Biblioitems
                 ->find( { 'biblionumber' => $item->{biblionumber} } );
         my $isbn = C4::Koha::GetNormalizedISBN($biblioitem->isbn);
-        $isbn =~ s/\D//g;
+        # $isbn =~ s/\D//g;
         my $cr = C4::XSLT::engine->transform($xml, $xsl);
         push(@$data, [$cr, $item->{volume}, $item->{pub_date}, 
-                      image_link($isbn)]);
+                      image_link($isbn, '', $i)]);
     }
 
     return $c->render( status => 200, openapi => 
@@ -202,6 +202,7 @@ sub image_link {
     my $isbn = shift;
     my $title = shift;
     my $link = '<div></div>';
+    my $index = shift;
 
     if ( C4::Context->preference('OPACAmazonCoverImages') ) {
         my $amazon_link = '<a href="http://www.amazon%s/gp/reader/%s%s';
@@ -211,14 +212,19 @@ sub image_link {
             $amazon_link .= '">'
         }
 
-        $amazon_link .= '<img border="0" src="https://images-na.ssl-images-amazon.com/images/P/%d.01.MZZZZZZZ.jpg" alt="Cover image" /></a>';
+        my $cover_html = <<"HTML";
+<div class='bookcoverimg' id='amazon-bookcoverimg-$index'>
+      <a href='https://images-na.ssl-images-amazon.com/images/P/$isbn.01.LZZZZZZZ.jpg' title='Amazon cover image'>
+      <img src='https://images-na.ssl-images-amazon.com/images/P/$isbn.01.MZZZZZZZ.jpg' alt='Amazon cover image' 
+          data-link='http://www.amazon.com/gp/reader/$isbn#reader-link'/>
+      </a>
 
-        $link = sprintf($amazon_link,
-                        get_amazon_tld(),
-                        $isbn,
-                        C4::Context->preference('AmazonAssocTag'),
-                        $isbn,
-                        );
+
+      <div class='hint'>Image from Amazon.com</div>
+</div>
+HTML
+
+        $link = $cover_html;
     }
 
     if ( C4::Context->preference('GoogleJackets') ) {
