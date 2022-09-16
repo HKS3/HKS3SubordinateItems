@@ -20,7 +20,7 @@ use Mojo::JSON qw(decode_json encode_json);
 my $translate = {
     'de-DE' => 
         {dt      => 'https://cdn.datatables.net/plug-ins/1.10.21/i18n/German.json',
-         columns => ['Daten', 'Band', 'Jahr', 'Cover'],
+         columns => ['Daten', 'Band', 'Jahr', 'Cover', 'Signatur'],
          label   => 'Bände',
         },
     'si-SI' => 
@@ -60,26 +60,35 @@ with cte_sub_items as (
         ExtractValue(metadata,'//datafield[\@tag="490"]/subfield[\@code="v"]') AS volume,
         ExtractValue(metadata,'.//datafield[\@tag="830"]/subfield[\@code="v"][contains(../subfield[\@code="w"], $search)]') AS volume_830v,
         ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="g"][contains(../subfield[\@code="w"], $search)]') AS volume_773g,
+        ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="q"][contains(../subfield[\@code="w"], $search)]') AS volume_773q,
         ExtractValue(metadata,'//datafield[\@tag="264"][\@ind2="1"]/subfield[\@code="c"]') AS pub_date,            
+        itemcallnumber signatur,
+        coded_location_qualifier lib_opac,
+        notforloan,
         isbn FROM biblio_metadata bm
         join biblioitems bi on bi.biblionumber = bm.biblionumber
+        left join items i  on bi.biblionumber = i.biblionumber
         where sf773w is not null or sf830w is not null
-),
-cte_sub2 as (
+)
     select
         biblionumber,        
         ITEM773,
         ITEM830,
         pub_date,
-        coalesce( nullif(volume_830v, ''), nullif(volume_773g, '')) volume,
-        isbn from cte_sub_items
-        where $article
-    )
-    select * from cte_sub2 where                
+        coalesce( nullif(volume_830v, ''), nullif(volume_773g, ''), nullif(volume_773q, '')) volume,
+        GROUP_CONCAT(CONCAT_WS(' ', lib_opac, signatur, if(notforloan=0, '', '[Nicht entlehnbar]')) SEPARATOR ' <br> ') item,
+        isbn 
+    from cte_sub_items
+        where $article and
         (JSON_CONTAINS(ITEM773,?,'\$') or
         JSON_CONTAINS(ITEM830,?,'\$'))            
+group by biblionumber,
+        ITEM773,
+        ITEM830,
+        pub_date,
+        coalesce( nullif(volume_830v, ''), nullif(volume_773g, ''), nullif(volume_773q, '')),
+        isbn
     order by pub_date desc, volume desc;
-
 SQL
 
     # implement ordering
@@ -117,7 +126,9 @@ SQL
         # $isbn =~ s/\D//g;
         my $cr = C4::XSLT::engine->transform($xml, $xsl);
         push(@$data, [$cr, $item->{volume}, $item->{pub_date}, 
-                      image_link($isbn, '', $i)]);
+                      image_link($isbn, '', $i),
+                      $item->{item},  
+                    ]);
     }
 
     return $c->render( status => 200, openapi => 

@@ -117,7 +117,8 @@ sub opac_js {
                                 <th>Data</th>
                                 <th>Volume</th>
                                 <th>Date</th>
-                                <th>Covers</th>
+                                <th>Cover</th>
+                                <th>Signatur</th>
                             </tr>
                         </thead>
                 </table>
@@ -175,7 +176,8 @@ sub opac_js {
                     {"title": data.title ? data.title[0] : 'Data'},
                     {"title": data.title ? data.title[1] : 'Volume'},
                     {"title": data.title ? data.title[2] : 'Year'},
-                    {"title": data.title ? data.title[3] : 'Cover'}
+                    {"title": data.title ? data.title[3] : 'Cover'},
+                    {"title": data.title ? data.title[4] : 'Signatur'}
                     ]
             } );
             })
