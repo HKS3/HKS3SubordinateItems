@@ -54,7 +54,7 @@ sub get {
 with cte_sub_items as (
     SELECT
         bm.biblionumber,
-        substr(ExtractValue(metadata,'//leader'), 8, 1) art,
+        subord_article art,
         sf773w_json AS ITEM773,
         sf830w_json AS ITEM830,
         ExtractValue(metadata,'//datafield[\@tag="490"]/subfield[\@code="v"]') AS volume,
