@@ -147,8 +147,9 @@ sub opac_js {
         
         if (subtype == 'volumes') {
             var tabs = $('#'+tab_classname+' ul')
-                .append('<li id="tab_volumes"><a id="vol_label" href="#volumes">Volume</a></li>');
+                .append('<li id="tab_volumes" class="nav-item" role="presentation"><a id="vol_label" class="nav-link" data-toggle="tab" role="tab" aria-controls="holdings" aria-selected="false"  href="#volumes"><span>Volume</span></a></li>');
             var volumes = $('#'+tab_classname)
+            //var volumes = $('#tab-content')
               .append(volumes_table);
             $("#tab_volumes").hide();
 

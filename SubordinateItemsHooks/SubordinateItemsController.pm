@@ -3,8 +3,6 @@ package Koha::Plugin::HKS3SubordinateItems::SubordinateItemsHooks::SubordinateIt
 use Mojo::Base 'Mojolicious::Controller';
 
 use C4::Context;
-use C4::Debug;
-use C4::Output qw(:html :ajax pagination_bar);
 use C4::Biblio;
 use C4::XSLT;
 
@@ -34,7 +32,9 @@ sub get {
     my $type  = $c->validation->param('type');
     my $lang_query  = $c->validation->param('lang');
     my $subtype  = $c->validation->param('subtype');
-    my $record       = GetMarcBiblio({ biblionumber => $biblionumber });
+    my $biblio = Koha::Biblios->find($biblionumber);
+    return unless defined $biblio;
+    my $record = $biblio->metadata->record;
     my $dbh = C4::Context->dbh;
     
     my $controlfield = $record->field('001');
@@ -119,7 +119,10 @@ SQL
     my $data = [];
     foreach my $item (@$items) {
         $i++;
-        my $xml = GetXmlBiblio($item->{biblionumber});
+	#my $biblio = Koha::Biblios->find($biblionumber);
+	#return unless defined $biblio;
+	#my $xml = $biblio->metadata;
+	my $xml = C4::Biblio::GetXmlBiblio($item->{biblionumber});
         my $biblioitem =  Koha::Biblioitems
                 ->find( { 'biblionumber' => $item->{biblionumber} } );
         my $isbn = C4::Koha::GetNormalizedISBN($biblioitem->isbn);
