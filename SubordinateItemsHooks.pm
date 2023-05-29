@@ -110,7 +110,8 @@ sub opac_js {
         console.log('add Volume tab', type, subtype);
         // var volumes_table = '<div id="'+subtype+'">';
         var volumes_table =`
-            <div id="volumes" class="table-striped">
+			<div id="volumes" class="tab-pane" role="tabpanel" aria-labelledby="tab_volumes-tab">
+            <div id="volumes_c" class="table-striped">
                 <table id="volumes_table" class="display" style="width:100%">
                         <thead>
                             <tr>
@@ -122,7 +123,9 @@ sub opac_js {
                             </tr>
                         </thead>
                 </table>
+			</div>
             </div>`
+			
         ;
 
         var articles_table =`
@@ -144,14 +147,14 @@ sub opac_js {
         } else  {
             var tab_classname = 'bibliodescriptions';
         }
+
         
         if (subtype == 'volumes') {
             var tabs = $('#'+tab_classname+' ul')
-                .append('<li id="tab_volumes" class="nav-item" role="presentation"><a id="vol_label" class="nav-link" data-toggle="tab" role="tab" aria-controls="holdings" aria-selected="false"  href="#volumes"><span>Volume</span></a></li>');
-            var volumes = $('#'+tab_classname)
-            //var volumes = $('#tab-content')
+    .append('<li id="tab_volumes-tab" class="nav-item" role="presentation"><a id="tab_volumes-tab" class="nav-link" data-toggle="tab" role="tab" aria-controls="tabs_volumes" aria-selected="false" href="#volumes">Volume</a></li>');
+           var volumes = $('.tab-content')
               .append(volumes_table);
-            $("#tab_volumes").hide();
+           $("#tab_volumes").hide();
 
        $(function(e) {
             var ajaxData = { 'biblionumber': biblionumber,
