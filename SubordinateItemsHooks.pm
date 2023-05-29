@@ -110,7 +110,7 @@ sub opac_js {
         console.log('add Volume tab', type, subtype);
         // var volumes_table = '<div id="'+subtype+'">';
         var volumes_table =`
-			<div id="volumes" class="tab-pane" role="tabpanel" aria-labelledby="tab_volumes-tab">
+	<div id="volumes" class="tab-pane" role="tabpanel" aria-labelledby="tab_volumes-tab">
             <div id="volumes_c" class="table-striped">
                 <table id="volumes_table" class="display" style="width:100%">
                         <thead>
@@ -123,13 +123,14 @@ sub opac_js {
                             </tr>
                         </thead>
                 </table>
-			</div>
-            </div>`
+	    </div>
+        </div>`
 			
         ;
 
         var articles_table =`
-            <div id="articles" class="table-striped">
+	<div id="articles" class="tab-pane" role="tabpanel" aria-labelledby="tab_articles-tab">
+            <div id="articles_c" class="table-striped">
                 <table id="articles_table" class="display" style="width:100%">
                         <thead>
                             <tr>
@@ -138,6 +139,7 @@ sub opac_js {
                             </tr>
                         </thead>
                 </table>
+            </div>
             </div>`
         ;
 
@@ -154,7 +156,7 @@ sub opac_js {
     .append('<li id="tab_volumes-tab" class="nav-item" role="presentation"><a id="tab_volumes-tab" class="nav-link" data-toggle="tab" role="tab" aria-controls="tabs_volumes" aria-selected="false" href="#volumes">Volume</a></li>');
            var volumes = $('.tab-content')
               .append(volumes_table);
-           $("#tab_volumes").hide();
+           $("#tab_volumes-tab").hide();
 
        $(function(e) {
             var ajaxData = { 'biblionumber': biblionumber,
@@ -166,9 +168,9 @@ sub opac_js {
             data: ajaxData,
         })
         .done(function(data) {
-            $('#vol_label').text((data.label ? data.label : 'Volumes')
+            $('#tab_volumes-tab a').text((data.label ? data.label : 'Volumes')
                                    + ' ( '+data.count+' )');
-            $("#tab_volumes").show();
+            $("#tab_volumes-tab").show();
             // $('#volumes').html(data.content);
             $('#volumes_table').DataTable( {
                 "data": data.data,
@@ -191,10 +193,10 @@ sub opac_js {
 
         } else {
             var tabs = $('#'+tab_classname+' ul')
-                .append('<li id="tab_articles"><a id="articles_label" href="#articles">Articles</a></li>');
-            var articles = $('#'+tab_classname)
-                .append(articles_table);
-            $("#tab_articles").hide();
+    .append('<li id="tab_articles-tab" class="nav-item" role="presentation"><a id="tab_articles-tab" class="nav-link" data-toggle="tab" role="tab" aria-controls="tabs_articles" aria-selected="false" href="#articles">Article</a></li>');
+           var volumes = $('.tab-content')
+              .append(articles_table);
+           $("#tab_articles-tab").hide();
 
         $(function(e) {
             var ajaxData = { 'biblionumber': biblionumber,
@@ -206,9 +208,9 @@ sub opac_js {
             data: ajaxData,
         })
         .done(function(data) {
-            $('#articles_label').text((data.label ? data.label : 'Articles')
+            $('#"tab_articles-tab a"').text((data.label ? data.label : 'Articles')
                                    + ' ( '+data.count+' )');
-            $("#tab_articles").show();
+            $("#tab_articles-tab").show();
             $('#articles_table').DataTable( {
                 "data": data.data,
                 "order": [],
