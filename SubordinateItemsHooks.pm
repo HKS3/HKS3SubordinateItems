@@ -208,7 +208,7 @@ sub opac_js {
             data: ajaxData,
         })
         .done(function(data) {
-            $('#"tab_articles-tab a"').text((data.label ? data.label : 'Articles')
+            $('#tab_articles-tab a').text((data.label ? data.label : 'Articles')
                                    + ' ( '+data.count+' )');
             $("#tab_articles-tab").show();
             $('#articles_table').DataTable( {
