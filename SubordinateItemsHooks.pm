@@ -154,7 +154,7 @@ sub opac_js {
         if (subtype == 'volumes') {
             var tabs = $('#'+tab_classname+' ul')
     .append('<li id="tab_volumes-tab" class="nav-item" role="presentation"><a id="tab_volumes-tab" class="nav-link" data-toggle="tab" role="tab" aria-controls="tabs_volumes" aria-selected="false" href="#volumes">Volume</a></li>');
-           var volumes = $('.tab-content')
+           var volumes = $('#'+tab_classname+' .tab-content')
               .append(volumes_table);
            $("#tab_volumes-tab").hide();
 
@@ -194,7 +194,7 @@ sub opac_js {
         } else {
             var tabs = $('#'+tab_classname+' ul')
     .append('<li id="tab_articles-tab" class="nav-item" role="presentation"><a id="tab_articles-tab" class="nav-link" data-toggle="tab" role="tab" aria-controls="tabs_articles" aria-selected="false" href="#articles">Article</a></li>');
-           var volumes = $('.tab-content')
+           var volumes = $('#'+tab_classname+' .tab-content')
               .append(articles_table);
            $("#tab_articles-tab").hide();
 
