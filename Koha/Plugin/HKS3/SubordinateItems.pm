@@ -84,6 +84,7 @@ sub opac_js {
     var page = $('body').attr('ID');
     // console.log('subordinate items', page, biblionumber);
     var lang = $('html').attr('lang');
+    replaceSeriesUrls();
     if (page == "opac-detail") {
         // "if" statment may/has to be removed when 
         // https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=27029
@@ -105,6 +106,24 @@ sub opac_js {
     } 
     
     // XXX ToDo translation
+
+    function replaceSeriesUrls() {
+       $(document).ready(function() {
+           // Find the specific span element with class 'results_summary series'
+           $("span.results_summary.series a[href*='rcn']").each(function() {
+               // Get the current href attribute value
+               var originalHref = $(this).attr('href');
+
+               // Replace 'control-number' with the desired value
+               var newHref = originalHref.replace(/rcn/g, 'control-number');
+
+               // Set the updated href attribute
+               $(this).attr('href', newHref);
+           });
+       });
+    }
+
+
 
     function addVolumeTab(biblionumber, type, subtype = 'volumes' ) {    
         console.log('add Volume tab', type, subtype);
