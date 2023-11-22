@@ -6,7 +6,16 @@ showing subordinate-items via
  - MARC 773 w and/or
  - MARC 830 w
 
-### SQL for speedup 
+### INSTALL
+
+ - create kpz file `zip -r hks3_subordinateitems.kpz Koha`
+ - enable koha plugins (https://koha-community.org/manual/latest/en/html/plugins.html)
+ - go to the Koha staff interface **More > Administration > Manage Plugins**
+ - Click **Upload plugin** and select *hks3_subordinateitems.kpz* file
+ - the page should reload and show the plugin. Enable it via the *Actions* dropdown menu.
+ - execute the following SQL statements
+
+### SQL
 
 ```
 alter table biblio_metadata add sf773w_json varchar(100) generated always as (
@@ -21,9 +30,6 @@ if ( length( trim(ExtractValue(metadata,'//datafield[@tag="830"]/subfield[@code=
  )) persistent;
 $$
 ```
-
-
-**if a book MUST only be a member of one hierarchy you may use those indices**
 
 ```
 alter table biblio_metadata add sf773w varchar(100) generated always as ( 
