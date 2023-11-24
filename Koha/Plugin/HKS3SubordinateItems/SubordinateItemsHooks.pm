@@ -187,6 +187,16 @@ sub opac_js {
             data: ajaxData,
         })
         .done(function(data) {
+
+            // ugly hack, remove various data from description
+            data.data.forEach(function(child) {
+                let desc = $('<div>'+child[0]+'</div>');
+                desc.find('.series').remove();
+                desc.find('.availability').remove();
+                desc.find('.rda264').remove();
+                child[0] = desc.html();
+            });
+
             $('#tab_volumes-tab a').text((data.label ? data.label : 'Volumes')
                                    + ' ( '+data.count+' )');
             $("#tab_volumes-tab").show();
