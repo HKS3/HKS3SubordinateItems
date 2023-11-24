@@ -2,9 +2,30 @@
 
 Conditionaly creates a tab in cgi-bin/koha/catalogue/detail.pl and opac-detail.pl
 
-showing subordinate-items via
- - MARC 773 w and/or
- - MARC 830 w
+showing subordinate-items via `MARC 773 w` and/or `MARC 830 w`
+
+### MARC 773
+
+TODO
+
+### MARC 830
+
+add field 830 to the child.
+
+```
+IND1 = #
+IND2 = 0
+w = control-number of the parent (MARC 001)
+t = title of the parent
+```
+
+also add field 490 to the child
+
+```
+IND1 = 1
+IND2 = #
+a = title of the parent
+```
 
 ### INSTALL
 
