@@ -233,6 +233,8 @@ sub intranet_js {
 }
 
 __END__
+
+TEST 
 <on(e) {
             var ajaxData = { 'biblionumber': biblionumber,
                              'type': type, 'lang': lang};
