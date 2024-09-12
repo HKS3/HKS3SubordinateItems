@@ -57,7 +57,7 @@ with cte_sub_items as (
         subord_article art,
         sf773w_json AS ITEM773,
         sf830w_json AS ITEM830,
-        ExtractValue(metadata,'//datafield[\@tag="490"]/subfield[\@code="v"]') AS volume,
+        ExtractValue(metadata,'//datafield[\@tag="490"]/subfield[\@code="v"]') AS volume_490v,
         ExtractValue(metadata,'.//datafield[\@tag="830"]/subfield[\@code="v"][contains(../subfield[\@code="w"], $search)]') AS volume_830v,
         ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="g"][contains(../subfield[\@code="w"], $search)]') AS volume_773g,
         ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="q"][contains(../subfield[\@code="w"], $search)]') AS volume_773q,
@@ -75,7 +75,7 @@ with cte_sub_items as (
         ITEM773,
         ITEM830,
         pub_date,
-        coalesce( nullif(volume_830v, ''), nullif(volume_773g, ''), nullif(volume_773q, '')) volume,
+        coalesce( nullif(volume_490v, ''),  nullif(volume_830v, ''), nullif(volume_773g, ''), nullif(volume_773q, '')) volume,
         GROUP_CONCAT(CONCAT_WS(' ', lib_opac, signatur, if(notforloan=0, '', '[Nicht entlehnbar]')) SEPARATOR ' <br> ') item,
         isbn 
     from cte_sub_items

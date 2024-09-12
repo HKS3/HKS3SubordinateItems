@@ -69,10 +69,7 @@ sub static_routes {
 
 sub opac_head {
     my ( $self ) = @_;
-
-    return q|
-<link href="/opac-tmpl/bootstrap/css/datatables-intra.css" rel="stylesheet" type="text/css">
-    |;
+    return q| <link href="/opac-tmpl/bootstrap/css/datatables.min_22.1100001.css" rel="stylesheet" type="text/css"> |; 
 }
 
 
