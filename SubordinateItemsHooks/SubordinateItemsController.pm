@@ -63,7 +63,7 @@ with cte_sub_items as (
         ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="q"][contains(../subfield[\@code="w"], $search)]') AS volume_773q,
         ExtractValue(metadata,'//datafield[\@tag="264"][\@ind2="1"]/subfield[\@code="c"]') AS pub_date,            
         itemcallnumber signatur,
-        coded_location_qualifier lib_opac,
+        ccode lib_opac,
         notforloan,
         isbn FROM biblio_metadata bm
         join biblioitems bi on bi.biblionumber = bm.biblionumber
