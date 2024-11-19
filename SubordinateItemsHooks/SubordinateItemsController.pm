@@ -12,13 +12,14 @@ use C4::XSLT;
 use C4::External::Amazon;
 
 use Koha::Biblios;
+use Koha::Libraries;
 use Koha::Items;
 use Mojo::JSON qw(decode_json encode_json);
 
 my $translate = {
     'de-DE' => 
         {dt      => 'https://cdn.datatables.net/plug-ins/1.10.21/i18n/German.json',
-         columns => ['Daten', 'Band', 'Jahr', 'Cover', 'Signatur'],
+         columns => ['Daten', 'Band', 'Jahr', 'Cover', 'Heimatbibliothek', 'Signatur'],
          label   => 'Bände',
         },
     'si-SI' => 
@@ -65,6 +66,7 @@ with cte_sub_items as (
         itemcallnumber signatur,
         coded_location_qualifier lib_opac,
         notforloan,
+        i.itemnumber,
         isbn FROM biblio_metadata bm
         join biblioitems bi on bi.biblionumber = bm.biblionumber
         left join items i  on bi.biblionumber = i.biblionumber
@@ -77,7 +79,8 @@ with cte_sub_items as (
         pub_date,
         coalesce( nullif(volume_490v, ''),  nullif(volume_830v, ''), nullif(volume_773g, ''), nullif(volume_773q, '')) volume,
         GROUP_CONCAT(CONCAT_WS(' ', lib_opac, signatur, if(notforloan=0, '', '[Nicht entlehnbar]')) SEPARATOR ' <br> ') item,
-        isbn 
+        isbn,
+        itemnumber 
     from cte_sub_items
         where $article and
         (JSON_CONTAINS(ITEM773,?,'\$') or
@@ -119,7 +122,6 @@ SQL
     my $data = [];
     foreach my $item (@$items) {
         $i++;
-	#my $biblio = Koha::Biblios->find($biblionumber);
 	#return unless defined $biblio;
 	#my $xml = $biblio->metadata;
 	my $xml = C4::Biblio::GetXmlBiblio($item->{biblionumber});
@@ -127,9 +129,19 @@ SQL
                 ->find( { 'biblionumber' => $item->{biblionumber} } );
         my $isbn = C4::Koha::GetNormalizedISBN($biblioitem->isbn);
         # $isbn =~ s/\D//g;
+	my $list_biblio = Koha::Biblios->find($item->{biblionumber});
+        my $list_items = $list_biblio->items;
+        my $item_data = '';
+        while ( my $dbitem = $list_items->next ) {
+            my $library = Koha::Libraries->find($dbitem->homebranch);
+            $item_data .= sprintf ("%s (%s)<br>\n", $library->branchname, $dbitem->homebranch);
+
+        }
+
         my $cr = C4::XSLT::engine->transform($xml, $xsl);
         push(@$data, [$cr, $item->{volume}, $item->{pub_date}, 
                       image_link($isbn, '', $i),
+                      $item_data,
                       $item->{item},  
                     ]);
     }
