@@ -134,7 +134,7 @@ SQL
         my $item_data = '';
         while ( my $dbitem = $list_items->next ) {
             my $library = Koha::Libraries->find($dbitem->homebranch);
-            $item_data .= sprintf ("%s (%s)<br>\n", $library->branchname, $dbitem->homebranch);
+            $item_data .= sprintf ("%s<br>\n", $library->branchname);
 
         }
 
@@ -245,8 +245,6 @@ sub image_link {
           data-link='http://www.amazon.com/gp/reader/$isbn#reader-link'/>
       </a>
 
-
-      <div class='hint'>Image from Amazon.com</div>
 </div>
 HTML
 
