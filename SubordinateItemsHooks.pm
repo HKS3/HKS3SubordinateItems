@@ -11,7 +11,7 @@ use Cwd qw(abs_path);
 
 use Mojo::JSON qw(decode_json);;
 
-our $VERSION = "0.2";
+our $VERSION = "0.3";
 
 # thanks to https://git.biblibre.com/biblibre/koha-plugin-intranet-detail-hook/src/branch/master/Koha/Plugin/Com/BibLibre/IntranetDetailHook.pm
 # thanks to https://github.com/bywatersolutions/dev-koha-plugin-kitchen-sink
@@ -20,8 +20,8 @@ our $metadata = {
     name            => 'SubordinateItems Plugin',
     author          => 'Mark Hofstetter',
     date_authored   => '2020-10-25',
-    date_updated    => "2020-10-26",
-    minimum_version => '19.05.00.000',
+    date_updated    => "2025-05-07",
+    minimum_version => '24.11.00.000',
     maximum_version => undef,
     version         => $VERSION,
     description     => 'this plugin selects subordinate items based on MARC773w and displays them in a separate tab in intranet'
@@ -172,7 +172,7 @@ sub opac_js {
         
         if (subtype == 'volumes') {
             var tabs = $('#'+tab_classname+' ul')
-    .append('<li id="tab_volumes-tab" class="nav-item" role="presentation"><a id="tab_volumes-tab" class="nav-link" data-toggle="tab" role="tab" aria-controls="tabs_volumes" aria-selected="false" href="#volumes">Volume</a></li>');
+    .append('<li id="tab_volumes-tab" class="nav-item" role="presentation"><a id="tab_volumes-tab" class="nav-link" data-bs-toggle="tab" role="tab" aria-controls="tabs_volumes" aria-selected="false" data-bs-target="#volumes">Volume</a></li>');
            var volumes = $('#'+tab_classname+' .tab-content')
               .append(volumes_table);
            $("#tab_volumes-tab").hide();
@@ -212,7 +212,7 @@ sub opac_js {
 
         } else {
             var tabs = $('#'+tab_classname+' ul')
-    .append('<li id="tab_articles-tab" class="nav-item" role="presentation"><a id="tab_articles-tab" class="nav-link" data-toggle="tab" role="tab" aria-controls="tabs_articles" aria-selected="false" href="#articles">Article</a></li>');
+    .append('<li id="tab_articles-tab" class="nav-item" role="presentation"><a id="tab_articles-tab" class="nav-link" data-bs-toggle="tab" role="tab" aria-controls="tabs_articles" aria-selected="false" data-bs-target="#articles">Article</a></li>');
            var volumes = $('#'+tab_classname+' .tab-content')
               .append(articles_table);
            $("#tab_articles-tab").hide();
