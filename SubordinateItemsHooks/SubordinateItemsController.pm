@@ -3,12 +3,7 @@ package Koha::Plugin::HKS3SubordinateItems::SubordinateItemsHooks::SubordinateIt
 use Mojo::Base 'Mojolicious::Controller';
 
 use C4::Context;
-use C4::Debug;
-use C4::Output qw(:html :ajax pagination_bar);
-use C4::Biblio;
-use C4::XSLT;
-
-use C4::Biblio;
+use C4::Biblio qw(GetXmlBiblio);
 use C4::XSLT;
 
 use C4::External::Amazon;
@@ -34,70 +29,94 @@ sub get {
     my $type  = $c->validation->param('type');
     my $lang_query  = $c->validation->param('lang');
     my $subtype  = $c->validation->param('subtype');
-    my $record       = GetMarcBiblio({ biblionumber => $biblionumber });
+    my $record = Koha::Biblios->find($biblionumber)->record;
+
     my $dbh = C4::Context->dbh;
     
     my $controlfield = $record->field('001');
     
     my $internalid = $controlfield->data;
     my $search = sprintf('"%s"', $controlfield->data); 
-    my $article = " art  "; 
-    if ($subtype eq 'articles') {
+    if ($subtype and $subtype eq 'articles') {
         $translate->{'de-DE'}->{'label'} = 'Artikel';
-        $article .=  ' = "a" ';
     } else {
         $translate->{'de-DE'}->{'label'} = 'Bände';
-        $article .=  ' <> "a" ';
     }
 
-    my $sql= <<"SQL";
-with cte_sub_items as (
-    SELECT
-        bm.biblionumber,
-        subord_article art,
-        sf773w_json AS ITEM773,
-        sf830w_json AS ITEM830,
-        ExtractValue(metadata,'//datafield[\@tag="490"]/subfield[\@code="v"]') AS volume,
-        ExtractValue(metadata,'.//datafield[\@tag="830"]/subfield[\@code="v"][contains(../subfield[\@code="w"], $search)]') AS volume_830v,
-        ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="g"][contains(../subfield[\@code="w"], $search)]') AS volume_773g,
-        ExtractValue(metadata,'//datafield[\@tag="773"]/subfield[\@code="q"][contains(../subfield[\@code="w"], $search)]') AS volume_773q,
-        ExtractValue(metadata,'//datafield[\@tag="264"][\@ind2="1"]/subfield[\@code="c"]') AS pub_date,            
-        itemcallnumber signatur,
-        coded_location_qualifier lib_opac,
-        notforloan,
-        isbn FROM biblio_metadata bm
-        join biblioitems bi on bi.biblionumber = bm.biblionumber
-        left join items i  on bi.biblionumber = i.biblionumber
-        where sf773w is not null or sf830w is not null
-)
-    select
-        biblionumber,        
-        ITEM773,
-        ITEM830,
-        pub_date,
-        coalesce( nullif(volume_830v, ''), nullif(volume_773g, ''), nullif(volume_773q, '')) volume,
-        GROUP_CONCAT(CONCAT_WS(' ', lib_opac, signatur, if(notforloan=0, '', '[Nicht entlehnbar]')) SEPARATOR ' <br> ') item,
-        isbn 
-    from cte_sub_items
-        where $article and
-        (JSON_CONTAINS(ITEM773,?,'\$') or
-        JSON_CONTAINS(ITEM830,?,'\$'))            
-group by biblionumber,
-        ITEM773,
-        ITEM830,
-        pub_date,
-        coalesce( nullif(volume_830v, ''), nullif(volume_773g, ''), nullif(volume_773q, '')),
-        isbn
-    order by pub_date desc, volume desc;
+    my $newquery = <<"SQL";
+    SELECT r.biblionumber
+         , r.id as record_id
+         , f.id as field_id
+         , f.tag
+         , s.code
+    FROM nm2db_records r
+    JOIN nm2db_fields f ON f.record_id = r.id
+    JOIN nm2db_subfields s ON s.field_id = f.id
+    JOIN biblio_metadata bm ON bm.biblionumber = r.biblionumber
+    WHERE s.value = ?
+    AND ((f.tag = '773' and s.code = 'w') or (f.tag = '830' and s.code = 'w'))
+    ORDER BY tag
 SQL
+    my $subords_query = $dbh->prepare($newquery);
+    $subords_query->execute($controlfield->data);
+    my $dbitems = $subords_query->fetchall_arrayref({});
 
-    # implement ordering
-    my $queryitem = $dbh->prepare($sql);
-    $queryitem->execute($search, $search);
-    my $items = $queryitem->fetchall_arrayref({});
-    
-    return 0 unless scalar(@$items) > 0;
-    
+    my @items;
+    for my $item (@$dbitems) {
+        my ($is_article) = $dbh->selectrow_array(q[
+            SELECT substr(value, 8, 1) = 'a'
+            FROM nm2db_fields f
+            JOIN nm2db_subfields s ON f.id = s.field_id
+            WHERE f.record_id = ?
+            AND f.tag = 'leader'
+        ], {}, $item->{record_id});
+        if ($subtype and $subtype eq 'articles' and !$is_article) {
+            next;
+        }
+
+        # our preference is 830v, 773g, 773q. There'll never be both 830 and 773 at the same time at this point, so alphabetical order of codes works for us
+        my ($volume) = $dbh->selectrow_array(q[
+            SELECT value FROM nm2db_subfields
+            WHERE field_id = ?
+            AND code in ('v', 'g', 'q')
+            ORDER BY code LIMIT 1
+        ], {}, $item->{field_id});
+
+        my ($pub_date) = $dbh->selectrow_array(q[
+            SELECT value FROM nm2db_fields f
+            JOIN nm2db_subfields s ON f.id = s.field_id
+            WHERE f.record_id = ?
+            AND f.tag = 264
+            AND f.indicator2 = '1'
+            AND s.code = 'c'
+        ], {}, $item->{record_id});
+
+        my ($isbn, $item_desc) = $dbh->selectrow_array(q[
+            SELECT isbn, GROUP_CONCAT(CONCAT_WS(' ', coded_location_qualifier, itemcallnumber, if(notforloan=0, '', '[Nicht entlehnbar]')) SEPARATOR ' <br> ') item
+            FROM biblioitems bi
+            LEFT JOIN items i ON bi.biblionumber = i.biblionumber
+            WHERE bi.biblionumber = ?
+            GROUP BY isbn
+        ], {}, $item->{biblionumber});
+
+        push @items, {
+            biblionumber => $item->{biblionumber},
+            isbn         => $isbn,
+            item         => $item_desc,
+            pub_date     => $pub_date,
+            volume       => $volume,
+        };
+    }
+
+    unless (@items) {
+        return $c->render( status => 404, openapi => {} );
+    }
+
+    @items = sort { # pub_date desc, volume desc. cmp because they aren't necessarily numbers
+        -($a->{pub_date} cmp $b->{pub_date})
+        or -($a->{volume} cmp $b->{volume})
+    } @items;
+
     my $xsl;
     my $htdocs;
     if ($type eq 'intranet') {
@@ -113,30 +132,31 @@ SQL
     
     $xsl = "$htdocs/$theme/$lang/xslt/$xsl";
     
-    my $content = '';
-    my $isbns = [];
     my $i = 0;
     my $data = [];
-    foreach my $item (@$items) {
+    foreach my $item (@items) {
         $i++;
         my $xml = GetXmlBiblio($item->{biblionumber});
-        my $biblioitem =  Koha::Biblioitems
-                ->find( { 'biblionumber' => $item->{biblionumber} } );
-        my $isbn = C4::Koha::GetNormalizedISBN($biblioitem->isbn);
-        # $isbn =~ s/\D//g;
+        my $biblioitem = Koha::Biblioitems->find({ 'biblionumber' => $item->{biblionumber} });
+        my $isbn = C4::Koha::GetNormalizedISBN($biblioitem->isbn); # $isbn =~ s/\D//g;
         my $cr = C4::XSLT::engine->transform($xml, $xsl);
-        push(@$data, [$cr, $item->{volume}, $item->{pub_date}, 
-                      image_link($isbn, '', $i),
-                      $item->{item},  
-                    ]);
+        push(@$data, [
+            $cr,
+            $item->{volume},
+            $item->{pub_date}, 
+            ($isbn ? image_link($isbn, '', $i) : ''),
+            $item->{item},  
+        ]);
     }
 
-    return $c->render( status => 200, openapi => 
-        { count => $i, ibsns => $isbns, data => $data,
-          datatable_lang => $translate->{$lang}->{dt}, lang => $lang, 
-          title => $translate->{$lang}->{columns}, 
-          label => $translate->{$lang}->{label}, 
-        } );
+    return $c->render( status => 200, openapi => {
+        count => $i,
+        data => $data,
+        datatable_lang => $translate->{$lang}->{dt},
+        lang => $lang, 
+        title => $translate->{$lang}->{columns}, 
+        label => $translate->{$lang}->{label}, 
+    } );
 }
 
 
@@ -189,7 +209,6 @@ SQL
 
     $xsl = "$htdocs/$theme/$lang/xslt/$xsl";
 
-    my $content = '';
     my $i = 0;
     my $data = [];
     foreach my $item (@$items) {
