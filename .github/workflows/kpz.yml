@@ -1,0 +1,32 @@
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  kpz:
+    name: "Build a KPZ archive"
+    runs-on: "ubuntu-latest"
+    steps:
+    - uses: actions/checkout@v4
+    - name: Get the plugin metadata
+      id: metadata
+      run: |
+        VERSION=$(perl -lne 'print $1 if /our \$VERSION = "(.*)"/' Koha/Plugin/HKS3/SubordinateItems.pm)
+        echo "Plugin version: $VERSION"
+        echo "plugin_version=$VERSION" >> $GITHUB_OUTPUT
+        MINIMUM_KOHA_VERSION=$(perl -lne 'print $1 if /minimum_version\s*=>\s*\D([\d\.]+)\D/' Koha/Plugin/HKS3/SubordinateItems.pm)
+        echo "Minimum Koha version: $MINIMUM_KOHA_VERSION"
+        echo "minimum_koha_version=$MINIMUM_KOHA_VERSION" >> $GITHUB_OUTPUT
+    - name: Build Koha Plugin kpz artifact
+      id: kpz
+      uses: "bywatersolutions/github-action-koha-plugin-create-kpz@master"
+      with:
+        release-version: ${{ steps.metadata.outputs.plugin_version }}
+        release-name: "Koha::Plugin::HKS3::SubordinateItems"
+        minimum-version: ${{ steps.metadata.outputs.minimum_koha_version }}
+        plugin-module: "Koha/Plugin/HKS3/SubordinateItems.pm"
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ${{ steps.kpz.outputs.filename }}

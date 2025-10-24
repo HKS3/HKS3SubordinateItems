@@ -1,4 +1,4 @@
-package Koha::Plugin::HKS3SubordinateItems::SubordinateItemsHooks;
+package Koha::Plugin::HKS3::SubordinateItems;
 
 use Modern::Perl;
 

@@ -1,4 +1,4 @@
-package Koha::Plugin::HKS3SubordinateItems::SubordinateItemsHooks::SubordinateItemsController;
+package Koha::Plugin::HKS3::SubordinateItems::SubordinateItemsController;
 
 use Mojo::Base 'Mojolicious::Controller';
 
@@ -34,6 +34,9 @@ sub get {
     my $dbh = C4::Context->dbh;
     
     my $controlfield = $record->field('001');
+    unless ($controlfield) {
+        return $c->render( status => 404, openapi => {} );
+    }
     
     my $internalid = $controlfield->data;
     my $search = sprintf('"%s"', $controlfield->data); 
