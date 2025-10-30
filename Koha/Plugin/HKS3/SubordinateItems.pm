@@ -11,7 +11,7 @@ use Cwd qw(abs_path);
 
 use Mojo::JSON qw(decode_json);;
 
-our $VERSION = "0.4";
+our $VERSION = "0.5";
 
 # thanks to https://git.biblibre.com/biblibre/koha-plugin-intranet-detail-hook/src/branch/master/Koha/Plugin/Com/BibLibre/IntranetDetailHook.pm
 # thanks to https://github.com/bywatersolutions/dev-koha-plugin-kitchen-sink
@@ -20,7 +20,7 @@ our $metadata = {
     name            => 'SubordinateItems Plugin',
     author          => 'Mark Hofstetter',
     date_authored   => '2020-10-25',
-    date_updated    => "2025-10-16",
+    date_updated    => "2025-10-30",
     minimum_version => '24.11.00.000',
     maximum_version => undef,
     version         => $VERSION,
@@ -80,7 +80,7 @@ sub opac_js {
     my ( $self ) = @_;
 
     my $js = <<'JS';
-    <script>
+    <script>$(document).ready(function () {
     var page = $('body').attr('ID');
     // console.log('subordinate items', page, biblionumber);
     var lang = $('html').attr('lang');
@@ -217,7 +217,7 @@ sub opac_js {
         });
         }
     }
-    </script>
+    });</script>
 JS
     
     return $js;
@@ -227,59 +227,3 @@ sub intranet_js {
     my ( $self ) = @_;
     return $self->opac_js();
 }
-
-__END__
-
-TEST 
-<on(e) {
-            var ajaxData = { 'biblionumber': biblionumber,
-                             'type': type, 'lang': lang};
-            $.ajax({
-              url: '/api/v1/contrib/subordinateitems/biblionumber/',
-            type: 'GET',
-            dataType: 'json',
-            data: ajaxData,
-        })
-        .done(function(data) {
-            $('#vol_label').text((data.label ? data.label : 'Volumes')
-                                   + ' ( '+data.count+' )');
-            $("#tab_volumes").show();
-            // $('#volumes').html(data.content);
-            $('#volumes_table').DataTable( {
-                "data": data.data,
-                "order": [],
-                "language": {
-                   "url": data.datatable_lang
-                },
-                "columns": [
-                    {"title": data.title ? data.title[0] : 'Data'},
-                    {"title": data.title ? data.title[1] : 'Volume'},
-                    {"title": data.title ? data.title[2] : 'Year'},
-                    {"title": data.title ? data.title[3] : 'Cover'}
-                    ]
-            } );
-            })
-        .error(function(data) {});
-        });
-id="example" class="display" style="width:100%">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Office</th>
-                <th>Extn.</th>
-                <th>Start date</th>
-                <th>Salary</th>
-            </tr>
-        </thead>
-        <tfoot>
-            <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Office</th>
-                <th>Extn.</th>
-                <th>Start date</th>
-                <th>Salary</th>
-            </tr>
-        </tfoot>
-    </table>
