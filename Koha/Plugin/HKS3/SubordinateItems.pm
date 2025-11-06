@@ -11,7 +11,7 @@ use Cwd qw(abs_path);
 
 use Mojo::JSON qw(decode_json);;
 
-our $VERSION = "0.5";
+our $VERSION = "0.6";
 
 # thanks to https://git.biblibre.com/biblibre/koha-plugin-intranet-detail-hook/src/branch/master/Koha/Plugin/Com/BibLibre/IntranetDetailHook.pm
 # thanks to https://github.com/bywatersolutions/dev-koha-plugin-kitchen-sink
@@ -20,7 +20,7 @@ our $metadata = {
     name            => 'SubordinateItems Plugin',
     author          => 'Mark Hofstetter',
     date_authored   => '2020-10-25',
-    date_updated    => "2025-10-30",
+    date_updated    => "2025-11-06",
     minimum_version => '24.11.00.000',
     maximum_version => undef,
     version         => $VERSION,
@@ -99,7 +99,7 @@ sub opac_js {
         addVolumeTab(biblionumber, 'opac', 'articles');
     }
     else if (page == "catalog_detail") {
-        // console.log('alread set ',biblionumber); 
+        const biblionumber = new URL(window.location.href).searchParams.get('biblionumber');
         addVolumeTab(biblionumber, 'intranet');
         addVolumeTab(biblionumber, 'intranet', 'articles');
     } 
