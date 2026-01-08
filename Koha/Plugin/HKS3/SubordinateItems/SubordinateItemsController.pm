@@ -140,6 +140,11 @@ SQL
     foreach my $item (@items) {
         $i++;
         my $xml = GetXmlBiblio($item->{biblionumber});
+
+        # Stolen from C4::XSLT::XSLTParse4Display, so that syspresfs like UseControlNumber apply
+        my $sysxml = C4::XSLT::get_xslt_sysprefs();
+        $xml =~ s{</record>}{$sysxml</record>};
+
         my $biblioitem = Koha::Biblioitems->find({ 'biblionumber' => $item->{biblionumber} });
         my $isbn = C4::Koha::GetNormalizedISBN($biblioitem->isbn); # $isbn =~ s/\D//g;
         my $cr = C4::XSLT::engine->transform($xml, $xsl);
