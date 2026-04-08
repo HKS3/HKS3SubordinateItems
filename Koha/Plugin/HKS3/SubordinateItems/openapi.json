@@ -28,7 +28,7 @@
       {
         "name": "subtype",
         "in": "query",
-        "description": "Article or Volume",
+        "description": "'volumes' (default) or 'articles'",
         "required": false,
         "type": "string"
       }

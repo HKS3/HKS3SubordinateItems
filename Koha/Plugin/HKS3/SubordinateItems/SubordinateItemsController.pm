@@ -28,7 +28,7 @@ sub get {
     my $biblionumber = $c->validation->param('biblionumber');
     my $type  = $c->validation->param('type');
     my $lang_query  = $c->validation->param('lang');
-    my $subtype  = $c->validation->param('subtype');
+    my $subtype  = $c->validation->param('subtype') // 'volumes';
     my $record = Koha::Biblios->find($biblionumber)->record;
 
     my $dbh = C4::Context->dbh;
@@ -40,7 +40,7 @@ sub get {
     
     my $internalid = $controlfield->data;
     my $search = sprintf('"%s"', $controlfield->data); 
-    if ($subtype and $subtype eq 'articles') {
+    if ($subtype eq 'articles') {
         $translate->{'de-DE'}->{'label'} = 'Artikel';
     } else {
         $translate->{'de-DE'}->{'label'} = 'Bände';
@@ -73,9 +73,7 @@ SQL
             WHERE f.record_id = ?
             AND f.tag = 'leader'
         ], {}, $item->{record_id});
-        if ($subtype and $subtype eq 'articles' and !$is_article) {
-            next;
-        }
+        next if ($subtype eq 'articles') != $is_article;
 
         # our preference is 830v, 773g, 773q. There'll never be both 830 and 773 at the same time at this point, so alphabetical order of codes works for us
         my ($volume) = $dbh->selectrow_array(q[
