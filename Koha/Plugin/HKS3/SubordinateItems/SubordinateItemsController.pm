@@ -92,6 +92,14 @@ SQL
             AND s.code = 'c'
         ], {}, $item->{record_id});
 
+        my ($pages) = $dbh->selectrow_array(q[
+            SELECT value FROM nm2db_fields f
+            JOIN nm2db_subfields s ON f.id = s.field_id
+            WHERE f.record_id = ?
+            AND f.tag = 300
+            AND s.code = 'a'
+        ], {}, $item->{record_id});
+
         my ($isbn, $item_desc) = $dbh->selectrow_array(q[
             SELECT isbn, GROUP_CONCAT(CONCAT_WS(' ', coded_location_qualifier, itemcallnumber, if(notforloan=0, '', '[Nicht entlehnbar]')) SEPARATOR ' <br> ') item
             FROM biblioitems bi
@@ -106,6 +114,7 @@ SQL
             item         => $item_desc,
             pub_date     => $pub_date,
             volume       => $volume,
+            pages        => $pages,
         };
     }
 
@@ -113,9 +122,11 @@ SQL
         return $c->render( status => 404, openapi => {} );
     }
 
-    @items = sort { # pub_date desc, volume desc. cmp because they aren't necessarily numbers
-        -($a->{pub_date} cmp $b->{pub_date})
-        or -($a->{volume} cmp $b->{volume})
+    @items = sort {
+        # first page number matters
+        my ($apages) = $a->{pages} =~ /(\d+)/;
+        my ($bpages) = $b->{pages} =~ /(\d+)/;
+        $apages <=> $bpages
     } @items;
 
     my $xsl;
@@ -126,6 +137,10 @@ SQL
     } else {
         $xsl = 'MARC21slim2OPACResults.xsl';
         $htdocs = C4::Context->config('opachtdocs');
+    }
+
+    if ($subtype eq 'articles') {
+        $xsl = 'MARC21slim2subordinateArticle.xsl';
     }
 
     my ($theme, $lang) = C4::Templates::themelanguage($htdocs, $xsl, $type);
@@ -164,75 +179,6 @@ SQL
         label => $translate->{$lang}->{label}, 
     } );
 }
-
-
-sub bytitle {
-    my $c = shift->openapi->valid_input or return;
-    my $title = $c->validation->param('title');
-    # ignore leader, for "Aufsatz"
-    my $ignore_leader = $c->validation->param('ignoreleader') ? $c->validation->param('ignoreleader') : 0;
-    my $dbh = C4::Context->dbh;
-
-    my $sql= <<'SQL';
-select 
-    ExtractValue(metadata,'//controlfield[@tag="001"]') AS control,         
-    b.title, 
-    b.biblionumber,
-    isbn, 
-    issn
-from biblio b join biblioitems bi              
-  on b.biblionumber = bi.biblionumber      
-join biblio_metadata bm       
-  on bi.biblionumber = bm.biblionumber 
-where b.title like ?
-SQL
-
-    if ($ignore_leader != 1) {
-    my $leader_sql= <<'SQL'; 
-and
-( 
-    (substring(ExtractValue(metadata,'//leader'), 8, 1) = 'm' and substring(ExtractValue(metadata,'//leader'), 20, 1) = 'a')  
-   or 
-    substring(ExtractValue(metadata,'//leader'), 8, 1) = 's'
-)
-SQL
-    $sql .= $leader_sql;
-    }
-
-    # implement ordering
-    my $queryitem = $dbh->prepare($sql);
-    $queryitem->execute($title .'%');
-    my $items = $queryitem->fetchall_arrayref({});
-
-    return 0 unless scalar(@$items) > 0;
-
-    my $type = 'intranet';
-    my $xsl = 'MARC21slim2intranetResults.xsl';
-    my $htdocs = C4::Context->config('intrahtdocs');
-
-    my ($theme, $lang) = C4::Templates::themelanguage($htdocs, $xsl, $type);
-    $lang = 'en';
-
-    $xsl = "$htdocs/$theme/$lang/xslt/$xsl";
-
-    my $i = 0;
-    my $data = [];
-    foreach my $item (@$items) {
-        $i++;
-        my $xml = GetXmlBiblio($item->{biblionumber});
-        my $cr = C4::XSLT::engine->transform($xml, $xsl);
-        my $select = sprintf('<input type="radio" id="%s" name="parent_radio" value="%s" title="%s">', 
-                            $item->{control}, $item->{control}, $item->{title});
-        push(@$data, [$select, $item->{title}, $cr, $item->{biblionumber}, $item->{control}, $item->{isbn}, $item->{issn}]);
-    }
-
-    return $c->render( status => 200, openapi => 
-        { 
-            count => $i,
-            data => $data,
-        } );
-}
-
 
 sub image_link {
     my $isbn = shift;

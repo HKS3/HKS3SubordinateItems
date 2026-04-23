@@ -128,12 +128,6 @@ sub opac_js {
         var articles_table =`
             <div id="articles" class="tab-pane">
                 <table id="articles_table" class="display" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Volume</th>
-                            </tr>
-                        </thead>
                 </table>
             </div>`
         ;
@@ -207,10 +201,7 @@ sub opac_js {
                 "language": {
                    "url": data.datatable_lang
                 },
-                "columns": [
-                    {"title": data.title ? data.title[0] : 'Data'},
-                    {"title": data.title ? data.title[1] : 'Volume'},
-                    ]
+                "columns": [ {"orderable": false} ]
             } );
             })
         .error(function(data) {});

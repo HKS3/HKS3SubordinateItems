@@ -63,57 +63,6 @@
         }
       }
     }
-  },
-  "/bytitle": {
-  "get": {
-      "x-mojo-to": "HKS3::SubordinateItems::SubordinateItemsController#bytitle",
-      "operationId": "SubordinateItemsByTitle",
-      "tags": ["biblios"],
-      "parameters": [{
-        "name": "title",
-        "in": "query",
-        "description": "title",
-        "required": true,
-        "type": "string"
-      },
-      {
-        "name": "ignoreleader",
-        "in": "query",
-        "description": "ignoreleader",
-        "required": false,
-        "type": "string"
-      }
-      ],
-      "produces": [
-        "application/json"
-      ],
-      "responses": {
-        "200": {
-          "description": "A list of subordinate biblionumber",
-          "schema": {
-              "type": "object",
-                "properties": {
-                  "pissed": {
-                    "description": "If the patron got pissed",
-                    "type": "boolean"
-                  }
-                }
-          }
-        },
-        "404": {
-          "description": "An error occured",
-          "schema": {
-              "type": "object",
-                "properties": {
-                  "error": {
-                    "description": "An explanation for the error",
-                    "type": "string"
-                  }
-                }
-          }
-        }
-      }
-    }
   }
 }
 
