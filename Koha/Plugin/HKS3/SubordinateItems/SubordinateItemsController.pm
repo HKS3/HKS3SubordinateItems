@@ -122,25 +122,23 @@ SQL
         return $c->render( status => 404, openapi => {} );
     }
 
-    @items = sort {
-        # first page number matters
-        my ($apages) = $a->{pages} =~ /(\d+)/;
-        my ($bpages) = $b->{pages} =~ /(\d+)/;
-        $apages <=> $bpages
-    } @items;
-
+    my $htdocs = C4::Context->config('intrahtdocs');
     my $xsl;
-    my $htdocs;
-    if ($type eq 'intranet') {
-        $xsl = 'MARC21slim2intranetResults.xsl';
-        $htdocs = C4::Context->config('intrahtdocs');
-    } else {
-        $xsl = 'MARC21slim2OPACResults.xsl';
-        $htdocs = C4::Context->config('opachtdocs');
-    }
 
     if ($subtype eq 'articles') {
         $xsl = 'MARC21slim2subordinateArticle.xsl';
+        @items = sort {
+            # first page number matters
+            my ($apages) = $a->{pages} =~ /(\d+)/;
+            my ($bpages) = $b->{pages} =~ /(\d+)/;
+            $apages <=> $bpages
+        } @items;
+    } else {
+        $xsl = 'MARC21slim2subordinateVolume.xsl';
+        @items = sort {
+            # volume desc. cmp because they aren't necessarily numbers
+            -($a->{volume} cmp $b->{volume})
+        } @items;
     }
 
     my ($theme, $lang) = C4::Templates::themelanguage($htdocs, $xsl, $type);

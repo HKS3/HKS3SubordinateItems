@@ -117,8 +117,6 @@ sub opac_js {
                                 <th>Data</th>
                                 <th>Volume</th>
                                 <th>Date</th>
-                                <th>Cover</th>
-                                <th>Signatur</th>
                             </tr>
                         </thead>
                 </table>
@@ -165,13 +163,12 @@ sub opac_js {
                 "language": {
                    "url": data.datatable_lang
                 },
+                autoWidth: false,
                 "columns": [
-                    {"title": data.title ? data.title[0] : 'Data'},
-                    {"title": data.title ? data.title[1] : 'Volume'},
-                    {"title": data.title ? data.title[2] : 'Year'},
-                    {"title": data.title ? data.title[3] : 'Cover'},
-                    {"title": data.title ? data.title[4] : 'Signatur'}
-                    ]
+                    {"title": data.title ? data.title[0] : 'Data',   width: '60%' },
+                    {"title": data.title ? data.title[1] : 'Volume', width: '20%' },
+                    {"title": data.title ? data.title[2] : 'Year',   width: '20%' },
+                ],
             } );
             })
         .error(function(data) {});
