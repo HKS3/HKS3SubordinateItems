@@ -141,9 +141,10 @@ SQL
         } @items;
     } else {
         $xsl = 'MARC21slim2subordinateVolume.xsl';
-        @items = sort { # pub_date desc, volume desc. cmp because they aren't necessarily numbers
-            -($a->{pub_date} cmp $b->{pub_date})
-            or ($a->{volume} cmp $b->{volume})
+        @items = sort { # pub_date asc, volume asc. cmp because they aren't necessarily numbers
+            my $apubdate = $a->{pub_date} =~ /(\d+)/;
+            my $bpubdate = $b->{pub_date} =~ /(\d+)/;
+            ($apubdate <=> $bpubdate) or ($a->{volume} cmp $b->{volume})
         } @items;
     }
 
