@@ -135,9 +135,9 @@ SQL
         } @items;
     } else {
         $xsl = 'MARC21slim2subordinateVolume.xsl';
-        @items = sort {
-            # volume desc. cmp because they aren't necessarily numbers
-            -($a->{volume} cmp $b->{volume})
+        @items = sort { # pub_date desc, volume desc. cmp because they aren't necessarily numbers
+            -($a->{pub_date} cmp $b->{pub_date})
+            or ($a->{volume} cmp $b->{volume})
         } @items;
     }
 
