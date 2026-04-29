@@ -122,7 +122,13 @@ SQL
         return $c->render( status => 404, openapi => {} );
     }
 
-    my $htdocs = C4::Context->config('intrahtdocs');
+    my $htdocs;
+    if ($type eq 'intranet') {
+        $htdocs = C4::Context->config('intrahtdocs');
+    } else {
+        $htdocs = C4::Context->config('opachtdocs');
+    }
+
     my $xsl;
 
     if ($subtype eq 'articles') {
