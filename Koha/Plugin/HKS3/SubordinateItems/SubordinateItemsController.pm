@@ -83,6 +83,13 @@ SQL
             ORDER BY code LIMIT 1
         ], {}, $item->{field_id});
 
+        my ($volume_num) = $dbh->selectrow_array(q[
+            SELECT value FROM nm2db_subfields
+            WHERE field_id = ?
+            AND code = 'q'
+            ORDER BY code LIMIT 1
+        ], {}, $item->{field_id});
+
         my ($pub_date) = $dbh->selectrow_array(q[
             SELECT value FROM nm2db_fields f
             JOIN nm2db_subfields s ON f.id = s.field_id
@@ -114,6 +121,7 @@ SQL
             item         => $item_desc,
             pub_date     => $pub_date,
             volume       => $volume,
+            volume_num   => $volume_num,
             pages        => $pages,
         };
     }
@@ -144,7 +152,7 @@ SQL
         @items = sort { # pub_date asc, volume asc. cmp because they aren't necessarily numbers
             my ($apubdate) = $a->{pub_date} =~ /(\d+)/;
             my ($bpubdate) = $b->{pub_date} =~ /(\d+)/;
-            ($apubdate <=> $bpubdate) or ($a->{volume} cmp $b->{volume})
+            ($apubdate <=> $bpubdate) or ($a->{volume_num} cmp $b->{volume_num})
         } @items;
     }
 
