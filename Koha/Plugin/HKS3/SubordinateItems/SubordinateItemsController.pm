@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
 use C4::Context;
 use C4::Biblio qw(GetXmlBiblio);
-use C4::XSLT;
+use C4::XSLT qw(buildKohaItemsNamespace);
 
 use C4::External::Amazon;
 
@@ -138,10 +138,11 @@ SQL
     foreach my $item (@items) {
         $i++;
         my $xml = GetXmlBiblio($item->{biblionumber});
+        my $itemsxml = buildKohaItemsNamespace($item->{biblionumber});
 
         # Stolen from C4::XSLT::XSLTParse4Display, so that syspresfs like UseControlNumber apply
         my $sysxml = C4::XSLT::get_xslt_sysprefs();
-        $xml =~ s{</record>}{$sysxml</record>};
+        $xml =~ s{</record>}{$itemsxml$sysxml</record>};
 
         my $biblioitem = Koha::Biblioitems->find({ 'biblionumber' => $item->{biblionumber} });
         my $isbn = C4::Koha::GetNormalizedISBN($biblioitem->isbn); # $isbn =~ s/\D//g;
