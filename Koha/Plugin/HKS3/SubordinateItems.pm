@@ -11,7 +11,7 @@ use Cwd qw(abs_path);
 
 use Mojo::JSON qw(decode_json);;
 
-our $VERSION = "0.8-vfgh-6";
+our $VERSION = "0.8-vfgh-7";
 
 # thanks to https://git.biblibre.com/biblibre/koha-plugin-intranet-detail-hook/src/branch/master/Koha/Plugin/Com/BibLibre/IntranetDetailHook.pm
 # thanks to https://github.com/bywatersolutions/dev-koha-plugin-kitchen-sink
