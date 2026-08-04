@@ -72,6 +72,7 @@ sub opac_head {
 
     return q|
 <link href="/opac-tmpl/bootstrap/css/datatables-intra.css" rel="stylesheet" type="text/css">
+<link href="/opac-tmpl/lib/datatables/datatables.css" rel="stylesheet" type="text/css">
     |;
 }
 
